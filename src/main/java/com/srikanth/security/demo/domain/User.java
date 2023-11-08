@@ -38,6 +38,7 @@ public class User implements UserDetails {
     public String getPassword() {
         return password;
     }
+    
 
     @Override
     public String getUsername() {
@@ -63,5 +64,11 @@ public class User implements UserDetails {
     public boolean isEnabled() {
         return true;
     }
+
+	public void setPassword(String password) {
+		// TODO Auto-generated method stub
+		  this.password = password;
+		
+	}
 
 }

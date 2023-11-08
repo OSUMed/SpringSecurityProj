@@ -30,7 +30,7 @@ public class SecurityConfiguration {
 	// User Details Service: Load user by user name:
     @Bean
     public UserDetailsService userDetailsService () {
-        return new UserService(passwordEncoder(), userRepository);
+        return new UserService(userRepository);
     }
     
     @Bean

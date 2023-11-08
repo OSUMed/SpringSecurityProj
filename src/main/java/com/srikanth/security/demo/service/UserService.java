@@ -14,12 +14,10 @@ import com.srikanth.security.demo.repository.UserRepository;
 public class UserService implements UserDetailsService {
 
 
-    private PasswordEncoder passwordEncoder;
     private UserRepository userRepository;
     
-    public UserService(PasswordEncoder passwordEncoder, UserRepository userRepository) {
+    public UserService(UserRepository userRepository) {
         super();
-        this.passwordEncoder = passwordEncoder;
         this.userRepository = userRepository;
     }
 
