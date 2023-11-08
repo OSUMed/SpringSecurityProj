@@ -4,20 +4,29 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.SecurityFilterChain;
-
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import com.srikanth.security.demo.service.UserService;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfiguration {
+	
+	 @Bean
+	    public PasswordEncoder passwordEncoder () {
+		 // On default use
+	        return new BCryptPasswordEncoder();
+	    }
 
 	// User Details Service: Load user by user name:
     @Bean
     public UserDetailsService userDetailsService () {
-        return new UserService();
+        return new UserService(passwordEncoder());
     }
     
     @Bean
@@ -39,7 +48,7 @@ public class SecurityConfiguration {
 //        .formLogin((form)->{form.loginPage("/login").permitAll()});
         
         // Adds regular log in:
-        .userDetailsService(userDetailsService())
+        .authenticationProvider(authenticationProvider())
         .formLogin(Customizer.withDefaults());
         
         
@@ -50,6 +59,14 @@ public class SecurityConfiguration {
 //                // set permitAll for all URLs associated with Form Login
 //                .permitAll();
         return http.build();
+    }
+    
+    @Bean
+    public AuthenticationProvider authenticationProvider () {
+        DaoAuthenticationProvider daoAuthenticationProvider = new DaoAuthenticationProvider();
+        daoAuthenticationProvider.setPasswordEncoder(passwordEncoder());
+        daoAuthenticationProvider.setUserDetailsService(userDetailsService());
+        return daoAuthenticationProvider;
     }
 
 }
