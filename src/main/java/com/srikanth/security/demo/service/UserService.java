@@ -13,6 +13,7 @@ import com.srikanth.security.demo.repository.UserRepository;
 
 public class UserService implements UserDetailsService {
 
+
     private PasswordEncoder passwordEncoder;
     private UserRepository userRepository;
     
@@ -25,7 +26,8 @@ public class UserService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         
-        User user = new User(username, passwordEncoder.encode("abc123"));
+//        User user = new User(username, passwordEncoder.encode("abc123"));
+    	User user = userRepository.findByUsername(username);
         
         if (user == null) throw new UsernameNotFoundException("Bad Credentials");
         
