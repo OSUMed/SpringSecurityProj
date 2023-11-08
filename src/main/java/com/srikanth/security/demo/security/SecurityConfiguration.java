@@ -5,13 +5,20 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.SecurityFilterChain;
+
+import com.srikanth.security.demo.service.UserService;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfiguration {
 
-// Example URL -> http://localhost:8080/products
+	// User Details Service: Load user by user name:
+    @Bean
+    public UserDetailsService userDetailsService () {
+        return new UserService();
+    }
     
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -32,6 +39,7 @@ public class SecurityConfiguration {
 //        .formLogin((form)->{form.loginPage("/login").permitAll()});
         
         // Adds regular log in:
+        .userDetailsService(userDetailsService())
         .formLogin(Customizer.withDefaults());
         
         
