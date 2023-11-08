@@ -11,22 +11,25 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+
+import com.srikanth.security.demo.repository.UserRepository;
 import com.srikanth.security.demo.service.UserService;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfiguration {
-	
-	 @Bean
-	    public PasswordEncoder passwordEncoder () {
-		 // On default use
-	        return new BCryptPasswordEncoder();
-	    }
+    private UserRepository userRepository;
+    
+    @Bean
+    public PasswordEncoder passwordEncoder () {
+	 // On default use
+        return new BCryptPasswordEncoder();
+    }
 
 	// User Details Service: Load user by user name:
     @Bean
     public UserDetailsService userDetailsService () {
-        return new UserService(passwordEncoder());
+        return new UserService(passwordEncoder(), userRepository);
     }
     
     @Bean
