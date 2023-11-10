@@ -24,7 +24,13 @@ public class SecurityConfiguration {
     private UserRepository userRepository;
     private JwtAuthenticationFilter jwtAuthenticationFilter;
     
-    @Bean
+    public SecurityConfiguration(UserRepository userRepository, JwtAuthenticationFilter jwtAuthenticationFilter) {
+		super();
+		this.userRepository = userRepository;
+		this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+	}
+
+	@Bean
     public PasswordEncoder passwordEncoder () {
 	 // On default use
         return new BCryptPasswordEncoder();
@@ -58,8 +64,8 @@ public class SecurityConfiguration {
         .authenticationProvider(authenticationProvider())
         // Add this filter for the Jwt authentication
         // 1st param: our jwt filter ; 2nd param: the jwt grader found in spring security
-        .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-        .formLogin(Customizer.withDefaults());
+        .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+//        .formLogin(Customizer.withDefaults());		// Won't work if you have Req.Headers Authorization strategy
         
         
 //        authorizeHttpRequests().requestMatchers("/public/**").permitAll().anyRequest()

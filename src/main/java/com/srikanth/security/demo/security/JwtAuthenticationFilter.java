@@ -16,15 +16,17 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
-
+import org.springframework.util.StringUtils;
 import com.srikanth.security.demo.service.JwtService;
 import com.srikanth.security.demo.service.UserService;
+import org.springframework.stereotype.Component;
 
+@Component
 // Once per request filter: because it passes by just once
 // Where we get the tokens via req.headers
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-	 private JwtService jwtService;
+	private JwtService jwtService;
     private UserService userService;
 	    
     public JwtAuthenticationFilter(JwtService jwtService, UserService userService) {
@@ -47,14 +49,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         //  Body -> (if JSON) key/value pairs
         String authHeader = request.getHeader("Authorization");
         
-        if (!authHeader.isEmpty()) {
+        if (StringUtils.hasText(authHeader)) {
             // hey, we have a token (probably) in the request
             // let's see if this token is a valid JWS or not
             String token = authHeader.substring(7);
             String subject = jwtService.getSubject(token);
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             
-            if (!subject.isEmpty() && authentication == null) {
+            if (StringUtils.hasText(subject) && authentication == null) {
                 UserDetails userDetails = userService.loadUserByUsername(subject);
                 
                 if (jwtService.isTokenValid(token, userDetails)) {

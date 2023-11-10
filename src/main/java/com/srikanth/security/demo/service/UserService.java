@@ -10,7 +10,9 @@ import com.srikanth.security.demo.domain.User;
 import com.srikanth.security.demo.repository.UserRepository;
 
 // implement spring security's user details service interface:
+import org.springframework.stereotype.Component;
 
+@Component
 public class UserService implements UserDetailsService {
 
 
