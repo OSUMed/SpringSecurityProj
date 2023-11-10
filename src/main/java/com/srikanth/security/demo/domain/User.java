@@ -34,7 +34,19 @@ public class User implements UserDetails {
         return null;
     }
 
-    @Override
+    public Integer getId() {
+		return id;
+	}
+
+	public void setId(Integer id) {
+		this.id = id;
+	}
+
+	public void setUsername(String username) {
+		this.username = username;
+	}
+
+	@Override
     public String getPassword() {
         return password;
     }

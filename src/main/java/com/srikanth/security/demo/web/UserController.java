@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import java.util.HashMap;
 import com.srikanth.security.demo.domain.User;
+import com.srikanth.security.demo.repository.RefreshTokenRepository;
 import com.srikanth.security.demo.repository.UserRepository;
 import com.srikanth.security.demo.response.AuthenticationResponse;
 import com.srikanth.security.demo.service.JwtService;
@@ -21,14 +22,20 @@ public class UserController {
     private PasswordEncoder passwordEncoder;
     private JwtService jwtService;
     private UserService userService;
+    private RefreshTokenRepository refreshTokenRepository;
     
-    public UserController(UserRepository userRepository, PasswordEncoder passwordEncoder) {
-        super();
-        this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
-    }
 
-    // For Non-JWT version:
+    public UserController(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtService jwtService,
+			UserService userService, RefreshTokenRepository refreshTokenRepository) {
+		super();
+		this.userRepository = userRepository;
+		this.passwordEncoder = passwordEncoder;
+		this.jwtService = jwtService;
+		this.userService = userService;
+		this.refreshTokenRepository = refreshTokenRepository;
+	}
+
+	// For Non-JWT version:
 //    @PostMapping("")
 //    public ResponseEntity<User> signUpUser (@RequestBody User user) {
 //        user.setPassword(passwordEncoder.encode(user.getPassword()));

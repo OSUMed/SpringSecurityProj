@@ -1,6 +1,8 @@
 package com.srikanth.security.demo.service;
 
 
+import java.util.Optional;
+
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -11,8 +13,9 @@ import com.srikanth.security.demo.repository.UserRepository;
 
 // implement spring security's user details service interface:
 import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
-@Component
+@Service
 public class UserService implements UserDetailsService {
 
 
@@ -32,6 +35,10 @@ public class UserService implements UserDetailsService {
         if (user == null) throw new UsernameNotFoundException("Bad Credentials");
         
         return user;
+    }
+
+    public Optional<User> findById (Integer userId) {
+        return userRepository.findById(userId);
     }
 
 }
