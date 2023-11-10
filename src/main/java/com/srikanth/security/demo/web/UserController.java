@@ -8,31 +8,36 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import java.util.HashMap;
+
+import com.srikanth.security.demo.domain.RefreshToken;
 import com.srikanth.security.demo.domain.User;
 import com.srikanth.security.demo.repository.RefreshTokenRepository;
 import com.srikanth.security.demo.repository.UserRepository;
+import com.srikanth.security.demo.request.RefreshTokenRequest;
 import com.srikanth.security.demo.response.AuthenticationResponse;
+import com.srikanth.security.demo.response.RefreshTokenResponse;
 import com.srikanth.security.demo.service.JwtService;
+import com.srikanth.security.demo.service.RefreshTokenService;
 import com.srikanth.security.demo.service.UserService;
 
 @RestController
 @RequestMapping("/api/v1/users")
 public class UserController {
-    private UserRepository userRepository;
-    private PasswordEncoder passwordEncoder;
-    private JwtService jwtService;
-    private UserService userService;
-    private RefreshTokenRepository refreshTokenRepository;
-    
+	private UserRepository userRepository;
+	private PasswordEncoder passwordEncoder;
+	private JwtService jwtService;
+	private UserService userService;
+	private RefreshTokenRepository refreshTokenRepository;
+	private RefreshTokenService refreshTokenService;
 
-    public UserController(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtService jwtService,
-			UserService userService, RefreshTokenRepository refreshTokenRepository) {
+	public UserController(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtService jwtService,
+			UserService userService, RefreshTokenService refreshTokenService) {
 		super();
 		this.userRepository = userRepository;
 		this.passwordEncoder = passwordEncoder;
 		this.jwtService = jwtService;
 		this.userService = userService;
-		this.refreshTokenRepository = refreshTokenRepository;
+		this.refreshTokenService = refreshTokenService;
 	}
 
 	// For Non-JWT version:
@@ -48,18 +53,27 @@ public class UserController {
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         User savedUser = userRepository.save(user);
         
-        String token = jwtService.generateToken(new HashMap<>(), savedUser);
-        
-        return ResponseEntity.ok(new AuthenticationResponse(savedUser.getUsername(), token));
-    }
-    
-    
-    
-    @PostMapping("/login")
-    public ResponseEntity<AuthenticationResponse> signInUser(@RequestBody User user) {
-        UserDetails loggedInUser = userService.loadUserByUsername(user.getUsername());
-        String token = jwtService.generateToken(new HashMap<>(), loggedInUser);
-        
-        return ResponseEntity.ok(new AuthenticationResponse(loggedInUser.getUsername(), token));
-    }
+        String accessToken = jwtService.generateToken(new HashMap<>(), savedUser);
+        RefreshToken refreshToken = refreshTokenService.generateRefreshToken(savedUser.getId());
+
+		return ResponseEntity
+				.ok(new AuthenticationResponse(savedUser.getUsername(), accessToken, refreshToken.getRefreshToken()));
+	}
+
+	@PostMapping("/login")
+	public ResponseEntity<AuthenticationResponse> signInUser(@RequestBody User user) {
+		User loggedInUser = (User) userService.loadUserByUsername(user.getUsername());
+		String accessToken = jwtService.generateToken(new HashMap<>(), loggedInUser);
+		RefreshToken refreshToken = refreshTokenService.generateRefreshToken(loggedInUser.getId());
+
+		return ResponseEntity.ok(
+				new AuthenticationResponse(loggedInUser.getUsername(), accessToken, refreshToken.getRefreshToken()));
+	}
+
+	@PostMapping("/refreshtoken")
+	public ResponseEntity<RefreshTokenResponse> getNewAccessToken(
+			@RequestBody RefreshTokenRequest refreshTokenRequest) {
+		String accessToken = refreshTokenService.createNewAccessToken(refreshTokenRequest);
+		return ResponseEntity.ok(new RefreshTokenResponse(accessToken, refreshTokenRequest.refreshToken()));
+	}
 }

@@ -19,6 +19,10 @@ public class RefreshToken {
         private String refreshToken;
         private Date expirationDate;
         
+        public RefreshToken() {
+        
+        }
+        
         public RefreshToken(User user, String refreshToken, Date expirationDate) {
             super();
             this.user = user;
