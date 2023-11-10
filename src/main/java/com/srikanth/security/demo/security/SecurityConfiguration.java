@@ -2,16 +2,18 @@ package com.srikanth.security.demo.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import com.srikanth.security.demo.repository.UserRepository;
 import com.srikanth.security.demo.service.UserService;
@@ -20,6 +22,7 @@ import com.srikanth.security.demo.service.UserService;
 @EnableWebSecurity
 public class SecurityConfiguration {
     private UserRepository userRepository;
+    private JwtAuthenticationFilter jwtAuthenticationFilter;
     
     @Bean
     public PasswordEncoder passwordEncoder () {
@@ -53,6 +56,9 @@ public class SecurityConfiguration {
         
         // Adds regular log in:
         .authenticationProvider(authenticationProvider())
+        // Add this filter for the Jwt authentication
+        // 1st param: our jwt filter ; 2nd param: the jwt grader found in spring security
+        .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
         .formLogin(Customizer.withDefaults());
         
         
