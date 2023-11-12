@@ -13,10 +13,19 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.ServletException;
+import java.io.IOException;
+
+import org.springframework.security.core.Authentication;
 
 import com.srikanth.security.demo.repository.UserRepository;
 import com.srikanth.security.demo.service.UserService;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 @Configuration
 @EnableWebSecurity
@@ -46,14 +55,30 @@ public class SecurityConfiguration {
         http.csrf(AbstractHttpConfigurer::disable)
           .authorizeHttpRequests((request) -> {
             request
-                   .requestMatchers("/api/v1/users").permitAll()
-                   .requestMatchers("/api/v1/users/**").permitAll()
+                   .requestMatchers("/api/v1/users", "/api/v1/users/**").permitAll()
                    .requestMatchers("/free").permitAll()
                    .anyRequest().authenticated();
         })
         .sessionManagement(manager -> manager.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .authenticationProvider(authenticationProvider())
-          .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+          .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+        .formLogin(login -> {
+        	login.loginPage("/viewlogin");
+        	login.failureUrl("/login-error");
+        	login.successHandler(new AuthenticationSuccessHandler() {
+
+				@Override
+				public void onAuthenticationSuccess(HttpServletRequest request,
+						jakarta.servlet.http.HttpServletResponse response, Authentication authentication)
+						throws IOException, jakarta.servlet.ServletException {
+					// TODO Auto-generated method stub
+				  response.sendRedirect("/products");
+					
+				}
+        	});
+
+        	login.permitAll();
+        });
         
         return http.build();
     }
