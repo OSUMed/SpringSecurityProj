@@ -23,10 +23,11 @@ public class RefreshTokenService {
 	private RefreshTokenRepository refreshTokenRepository;
 	private JwtService jwtService;
 
-	public RefreshTokenService(UserService userService, RefreshTokenRepository refreshTokenRepository) {
+	public RefreshTokenService(UserService userService, RefreshTokenRepository refreshTokenRepository, JwtService jwtService) {
 		super();
 		this.userService = userService;
 		this.refreshTokenRepository = refreshTokenRepository;
+		this.jwtService = jwtService;
 	}
 
 	// To ensure id is not null, if user in repo, then make refresh token.
