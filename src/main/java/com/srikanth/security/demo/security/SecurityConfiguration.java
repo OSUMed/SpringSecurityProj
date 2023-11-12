@@ -41,40 +41,57 @@ public class SecurityConfiguration {
     public UserDetailsService userDetailsService () {
         return new UserService(userRepository);
     }
-    
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http.csrf(AbstractHttpConfigurer::disable).authorizeHttpRequests((request) -> {
-        	
-        	// All users get access
-        	request.requestMatchers("/free").permitAll();
-        	
-        	// Any role who is authenticated get access:
-        	request.requestMatchers("/authonly").authenticated();
-        	
-        	// Only people who logged in and has access "USER", 
-        	// Other endpoints not in previous rules -> get all access 
-        	request.requestMatchers("/products");
+        http.csrf(AbstractHttpConfigurer::disable)
+          .authorizeHttpRequests((request) -> {
+            request
+                   .requestMatchers("/api/v1/users").permitAll()
+                   .requestMatchers("/api/v1/users/**").permitAll()
+                   .requestMatchers("/free").permitAll()
+                   .anyRequest().authenticated();
         })
-        //if you want simple form Java Security, render the template
-//        .formLogin((form)->{form.loginPage("/login").permitAll()});
-        
-        // Adds regular log in:
+        .sessionManagement(manager -> manager.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .authenticationProvider(authenticationProvider())
-        // Add this filter for the Jwt authentication
-        // 1st param: our jwt filter ; 2nd param: the jwt grader found in spring security
-        .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
-//        .formLogin(Customizer.withDefaults());		// Won't work if you have Req.Headers Authorization strategy
+          .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         
-        
-//        authorizeHttpRequests().requestMatchers("/public/**").permitAll().anyRequest()
-//                .hasRole("USER").and()
-//                // Possibly more configuration ...
-//                .formLogin() // enable form based log in
-//                // set permitAll for all URLs associated with Form Login
-//                .permitAll();
         return http.build();
     }
+//    @Bean
+//    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+//        http.csrf(AbstractHttpConfigurer::disable).authorizeHttpRequests((request) -> {
+//        	
+//        	// All users get access
+//        	request.requestMatchers("/").permitAll();
+//        	request.requestMatchers("/login").permitAll();
+//        	request.requestMatchers("/free").permitAll();
+//        	
+//        	// Any role who is authenticated get access:
+//        	request.requestMatchers("/authonly").authenticated();
+//        	
+//        	// Only people who logged in and has access "USER", 
+//        	// Other endpoints not in previous rules -> get all access 
+//        	request.requestMatchers("/products").authenticated();
+//        })
+//        //if you want simple form Java Security, render the template
+////        .formLogin((form)->{form.loginPage("/login").permitAll()});
+//        
+//        // Adds regular log in:
+//        .authenticationProvider(authenticationProvider())
+//        // Add this filter for the Jwt authentication
+//        // 1st param: our jwt filter ; 2nd param: the jwt grader found in spring security
+//        .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+////        .formLogin(Customizer.withDefaults());		// Won't work if you have Req.Headers Authorization strategy
+//        
+//        
+////        authorizeHttpRequests().requestMatchers("/public/**").permitAll().anyRequest()
+////                .hasRole("USER").and()
+////                // Possibly more configuration ...
+////                .formLogin() // enable form based log in
+////                // set permitAll for all URLs associated with Form Login
+////                .permitAll();
+//        return http.build();
+//    }
     
     @Bean
     public AuthenticationProvider authenticationProvider () {
