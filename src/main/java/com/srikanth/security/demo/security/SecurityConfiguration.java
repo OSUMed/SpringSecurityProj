@@ -9,22 +9,27 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.ServletException;
 import java.io.IOException;
+import java.util.HashMap;
 
 import org.springframework.security.core.Authentication;
 
+import com.srikanth.security.demo.domain.RefreshToken;
+import com.srikanth.security.demo.domain.User;
 import com.srikanth.security.demo.repository.UserRepository;
+import com.srikanth.security.demo.service.JwtService;
+import com.srikanth.security.demo.service.RefreshTokenService;
 import com.srikanth.security.demo.service.UserService;
+import com.srikanth.security.demo.util.CookieUtils;
 
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 
 @Configuration
@@ -32,11 +37,18 @@ import jakarta.servlet.http.HttpServletRequest;
 public class SecurityConfiguration {
     private UserRepository userRepository;
     private JwtAuthenticationFilter jwtAuthenticationFilter;
+    private JwtService jwtService;
+    private RefreshTokenService refreshTokenService;
     
-    public SecurityConfiguration(UserRepository userRepository, JwtAuthenticationFilter jwtAuthenticationFilter) {
+
+
+	public SecurityConfiguration(UserRepository userRepository, JwtAuthenticationFilter jwtAuthenticationFilter,
+			JwtService jwtService, RefreshTokenService refreshTokenService) {
 		super();
 		this.userRepository = userRepository;
 		this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+		this.jwtService = jwtService;
+		this.refreshTokenService = refreshTokenService;
 	}
 
 	@Bean
@@ -71,7 +83,17 @@ public class SecurityConfiguration {
 				public void onAuthenticationSuccess(HttpServletRequest request,
 						jakarta.servlet.http.HttpServletResponse response, Authentication authentication)
 						throws IOException, jakarta.servlet.ServletException {
+					
+					User user = (User) authentication.getPrincipal();
 					// TODO Auto-generated method stub
+					String accessToken = jwtService.generateToken(new HashMap<>(), user);
+					RefreshToken refreshToken = refreshTokenService.generateRefreshToken(user.getId());
+					
+					Cookie accessTokenCookie = CookieUtils.createAccessTokenCookie(accessToken);
+					Cookie refreshTokenCookie = CookieUtils.createRefeshTokenCookie(refreshToken.getRefreshToken());
+					response.addCookie(refreshTokenCookie);
+					response.addCookie(accessTokenCookie);
+				 
 				  response.sendRedirect("/products");
 					
 				}
