@@ -54,8 +54,7 @@ public class SecurityConfiguration {
         	
         	// Only people who logged in and has access "USER", 
         	// Other endpoints not in previous rules -> get all access 
-        	request.requestMatchers("/products").hasAnyRole("USER")
-            .anyRequest().permitAll();
+        	request.requestMatchers("/products");
         })
         //if you want simple form Java Security, render the template
 //        .formLogin((form)->{form.loginPage("/login").permitAll()});
