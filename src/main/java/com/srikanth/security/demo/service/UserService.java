@@ -28,17 +28,14 @@ public class UserService implements UserDetailsService {
 
 	@Override
 	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-	    User user = userRepository.findByUsername(username);
-	    if (user == null) {
-	        throw new UsernameNotFoundException("User not found with username: " + username);
-	    }
-	    return new org.springframework.security.core.userdetails.User(
-	        user.getUsername(),
-	        user.getPassword(),
-	        user.getAuthorities().stream()
-	            .map(authority -> new SimpleGrantedAuthority(authority.getName()))
-	            .collect(Collectors.toList())
-	    );
+		User user = userRepository.findByUsername(username);
+		if (user == null) {
+			throw new UsernameNotFoundException("User not found with username: " + username);
+		}
+		return new org.springframework.security.core.userdetails.User(user.getUsername(), user.getPassword(),
+				user.getAuthorities().stream().map(authority -> new SimpleGrantedAuthority(authority.getAuthority()))
+						.collect(Collectors.toList()));
+
 	}
 
 	public Optional<User> findById(Integer userId) {

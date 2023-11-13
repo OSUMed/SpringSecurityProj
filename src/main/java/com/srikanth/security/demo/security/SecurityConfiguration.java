@@ -37,12 +37,10 @@ import jakarta.servlet.http.HttpServletResponse;
 @Configuration
 @EnableWebSecurity
 public class SecurityConfiguration {
-    private UserRepository userRepository;
-    private JwtAuthenticationFilter jwtAuthenticationFilter;
-    private JwtService jwtService;
-    private RefreshTokenService refreshTokenService;
-    
-
+	private UserRepository userRepository;
+	private JwtAuthenticationFilter jwtAuthenticationFilter;
+	private JwtService jwtService;
+	private RefreshTokenService refreshTokenService;
 
 	public SecurityConfiguration(UserRepository userRepository, JwtAuthenticationFilter jwtAuthenticationFilter,
 			JwtService jwtService, RefreshTokenService refreshTokenService) {
@@ -54,59 +52,79 @@ public class SecurityConfiguration {
 	}
 
 	@Bean
-    public PasswordEncoder passwordEncoder () {
-	 // On default use
-        return new BCryptPasswordEncoder();
-    }
+	public PasswordEncoder passwordEncoder() {
+		// On default use
+		return new BCryptPasswordEncoder();
+	}
 
 	// User Details Service: Load user by user name:
-    @Bean
-    public UserDetailsService userDetailsService () {
-        return new UserService(userRepository);
-    }
-    @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-    	 String[] publicEndpoints = new String[] {
-    		        "/api/v1/users",
-    		        "/api/v1/users/**",
-    		        "/free"
-    	 };
-        http.csrf(AbstractHttpConfigurer::disable)
-          .authorizeHttpRequests((request) -> {
-            request
-                   .requestMatchers(publicEndpoints).permitAll()
-                   .anyRequest().authenticated();
-        })
-        .sessionManagement(manager -> manager.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-        .authenticationProvider(authenticationProvider())
-        .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-        .formLogin(this::configureFormLogin);
+	@Bean
+	public UserDetailsService userDetailsService() {
+		return new UserService(userRepository);
+	}
 
-        return http.build();
-    }
-    
-    private void configureFormLogin(FormLoginConfigurer<HttpSecurity> login) {
-        login.loginPage("/viewlogin")
-             .failureUrl("/login-error")
-             .successHandler(this::onAuthenticationSuccess)
-             .permitAll();
-    }
+	@Bean
+	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+	    http
+	        .csrf(AbstractHttpConfigurer::disable)
+	        .authorizeHttpRequests(authz -> {
+	            authz
+	                .requestMatchers("/api/v1/users", "/api/v1/users/**", "/free").permitAll() // Public endpoints
+	                .requestMatchers("/admin/**").hasAuthority("ROLE_ADMIN") // Admin-only endpoints
+	                .requestMatchers("/user/**").hasAuthority("ROLE_USER"); // User-only endpoints
+	            authz
+	                .anyRequest().authenticated(); // All other requests must be authenticated
+	        })
+	        .sessionManagement(manager -> manager.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+	        .authenticationProvider(authenticationProvider())
+	        .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+	        .formLogin(this::configureFormLogin);
 
-    // Auth successful? -> Create the access/refresh tokens and add to response:
-    private void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
-                                         Authentication authentication) throws IOException {
-    	System.out.println("authentication is: " + authentication);
-    	User user = (User) authentication.getPrincipal();
-        String accessToken = jwtService.generateToken(new HashMap<>(), user);
-        RefreshToken refreshToken = refreshTokenService.generateRefreshToken(user.getId());
+	    return http.build();
+	}
 
-        Cookie accessTokenCookie = CookieUtils.createAccessTokenCookie(accessToken);
-        Cookie refreshTokenCookie = CookieUtils.createRefeshTokenCookie(refreshToken.getRefreshToken());
-        response.addCookie(refreshTokenCookie);
-        response.addCookie(accessTokenCookie);
 
-        response.sendRedirect("/products");
-    }
+//    @Bean
+//    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+//    	 String[] publicEndpoints = new String[] {
+//    		        "/api/v1/users",
+//    		        "/api/v1/users/**",
+//    		        "/free"
+//    	 };
+//        http.csrf(AbstractHttpConfigurer::disable)
+//          .authorizeHttpRequests((request) -> {
+//            request
+//                   .requestMatchers(publicEndpoints).permitAll()
+//                   .anyRequest().authenticated();
+//        })
+//        .sessionManagement(manager -> manager.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+//        .authenticationProvider(authenticationProvider())
+//        .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+//        .formLogin(this::configureFormLogin);
+//
+//        return http.build();
+//    }
+//    
+	private void configureFormLogin(FormLoginConfigurer<HttpSecurity> login) {
+		login.loginPage("/viewlogin").failureUrl("/login-error").successHandler(this::onAuthenticationSuccess)
+				.permitAll();
+	}
+
+	// Auth successful? -> Create the access/refresh tokens and add to response:
+	private void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
+			Authentication authentication) throws IOException {
+		System.out.println("authentication is: " + authentication);
+		User user = (User) authentication.getPrincipal();
+		String accessToken = jwtService.generateToken(new HashMap<>(), user);
+		RefreshToken refreshToken = refreshTokenService.generateRefreshToken(user.getId());
+
+		Cookie accessTokenCookie = CookieUtils.createAccessTokenCookie(accessToken);
+		Cookie refreshTokenCookie = CookieUtils.createRefeshTokenCookie(refreshToken.getRefreshToken());
+		response.addCookie(refreshTokenCookie);
+		response.addCookie(accessTokenCookie);
+
+		response.sendRedirect("/products");
+	}
 //    @Bean
 //    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 //        http.csrf(AbstractHttpConfigurer::disable).authorizeHttpRequests((request) -> {
@@ -142,14 +160,14 @@ public class SecurityConfiguration {
 ////                .permitAll();
 //        return http.build();
 //    }
-    
-    // The key player in comparing the request's cookie with the H2 db deets:
-    @Bean
-    public AuthenticationProvider authenticationProvider () {
-        DaoAuthenticationProvider daoAuthenticationProvider = new DaoAuthenticationProvider();
-        daoAuthenticationProvider.setPasswordEncoder(passwordEncoder());
-        daoAuthenticationProvider.setUserDetailsService(userDetailsService());
-        return daoAuthenticationProvider;
-    }
+
+	// The key player in comparing the request's cookie with the H2 db deets:
+	@Bean
+	public AuthenticationProvider authenticationProvider() {
+		DaoAuthenticationProvider daoAuthenticationProvider = new DaoAuthenticationProvider();
+		daoAuthenticationProvider.setPasswordEncoder(passwordEncoder());
+		daoAuthenticationProvider.setUserDetailsService(userDetailsService());
+		return daoAuthenticationProvider;
+	}
 
 }

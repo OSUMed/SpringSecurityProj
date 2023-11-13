@@ -6,7 +6,6 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.Table;
 
 
 @Entity
@@ -14,6 +13,7 @@ public class Authority implements GrantedAuthority {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Integer id;
+	private static final long serialVersionUID = 1L;
 
 	private String name; // e.g., "ROLE_USER", "ROLE_ADMIN"
 
