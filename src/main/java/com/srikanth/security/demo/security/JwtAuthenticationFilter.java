@@ -58,6 +58,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 		// Requests:
 		// Headers -> key/value pairs (Authorization -> Bearer xxx.yyy.zzz)
 		// Body -> (if JSON) key/value pairs
+		
+		// Get the Cookies:
 		Cookie accessTokenCookie = null;
 		Cookie refreshTokenCookie = null;
 

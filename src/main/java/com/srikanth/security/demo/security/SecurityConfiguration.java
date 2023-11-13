@@ -8,6 +8,7 @@ import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.annotation.web.configurers.FormLoginConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -31,6 +32,7 @@ import com.srikanth.security.demo.util.CookieUtils;
 
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 @Configuration
 @EnableWebSecurity
@@ -64,45 +66,46 @@ public class SecurityConfiguration {
     }
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    	 String[] publicEndpoints = new String[] {
+    		        "/api/v1/users",
+    		        "/api/v1/users/**",
+    		        "/free"
+    	 };
         http.csrf(AbstractHttpConfigurer::disable)
           .authorizeHttpRequests((request) -> {
             request
-                   .requestMatchers("/api/v1/users", "/api/v1/users/**").permitAll()
-                   .requestMatchers("/free").permitAll()
+                   .requestMatchers(publicEndpoints).permitAll()
                    .anyRequest().authenticated();
         })
         .sessionManagement(manager -> manager.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .authenticationProvider(authenticationProvider())
-          .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-        .formLogin(login -> {
-        	login.loginPage("/viewlogin");
-        	login.failureUrl("/login-error");
-        	login.successHandler(new AuthenticationSuccessHandler() {
+        .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+        .formLogin(this::configureFormLogin);
 
-				@Override
-				public void onAuthenticationSuccess(HttpServletRequest request,
-						jakarta.servlet.http.HttpServletResponse response, Authentication authentication)
-						throws IOException, jakarta.servlet.ServletException {
-					
-					User user = (User) authentication.getPrincipal();
-					// TODO Auto-generated method stub
-					String accessToken = jwtService.generateToken(new HashMap<>(), user);
-					RefreshToken refreshToken = refreshTokenService.generateRefreshToken(user.getId());
-					
-					Cookie accessTokenCookie = CookieUtils.createAccessTokenCookie(accessToken);
-					Cookie refreshTokenCookie = CookieUtils.createRefeshTokenCookie(refreshToken.getRefreshToken());
-					response.addCookie(refreshTokenCookie);
-					response.addCookie(accessTokenCookie);
-				 
-				  response.sendRedirect("/products");
-					
-				}
-        	});
-
-        	login.permitAll();
-        });
-        
         return http.build();
+    }
+    
+    private void configureFormLogin(FormLoginConfigurer<HttpSecurity> login) {
+        login.loginPage("/viewlogin")
+             .failureUrl("/login-error")
+             .successHandler(this::onAuthenticationSuccess)
+             .permitAll();
+    }
+
+    // Auth successful? -> Create the access/refresh tokens and add to response:
+    private void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
+                                         Authentication authentication) throws IOException {
+    	System.out.println("authentication is: " + authentication);
+    	User user = (User) authentication.getPrincipal();
+        String accessToken = jwtService.generateToken(new HashMap<>(), user);
+        RefreshToken refreshToken = refreshTokenService.generateRefreshToken(user.getId());
+
+        Cookie accessTokenCookie = CookieUtils.createAccessTokenCookie(accessToken);
+        Cookie refreshTokenCookie = CookieUtils.createRefeshTokenCookie(refreshToken.getRefreshToken());
+        response.addCookie(refreshTokenCookie);
+        response.addCookie(accessTokenCookie);
+
+        response.sendRedirect("/products");
     }
 //    @Bean
 //    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -140,6 +143,7 @@ public class SecurityConfiguration {
 //        return http.build();
 //    }
     
+    // The key player in comparing the request's cookie with the H2 db deets:
     @Bean
     public AuthenticationProvider authenticationProvider () {
         DaoAuthenticationProvider daoAuthenticationProvider = new DaoAuthenticationProvider();
