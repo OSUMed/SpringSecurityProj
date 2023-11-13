@@ -2,12 +2,15 @@ package com.srikanth.security.demo.service;
 
 import java.security.Key;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import javax.crypto.SecretKey;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
@@ -34,9 +37,13 @@ public class JwtService {
     private Long expirationTimeInMillis;
     
     public String generateToken(Map<String, Object> extraClaims, UserDetails user) {
+        Map<String, Object> claims = new HashMap<>(extraClaims);
+        claims.put("authorities", user.getAuthorities().stream()
+            .map(GrantedAuthority::getAuthority)
+            .collect(Collectors.toList()));
         
        String jwt = Jwts.builder()
-            .setClaims(extraClaims)
+            .setClaims(claims)
             .setSubject(user.getUsername())
             .setIssuedAt(new Date())
             .setHeaderParam("typ", Header.JWT_TYPE)
