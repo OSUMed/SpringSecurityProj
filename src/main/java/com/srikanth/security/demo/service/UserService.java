@@ -32,6 +32,9 @@ public class UserService implements UserDetailsService {
 		if (user == null) {
 			throw new UsernameNotFoundException("User not found with username: " + username);
 		}
+		
+		// EAGER or LAZY, we have to create a new UserDetails object for seperation of concern,
+		// for easier spring security usage:
 		return new org.springframework.security.core.userdetails.User(user.getUsername(), user.getPassword(),
 				user.getAuthorities().stream().map(authority -> new SimpleGrantedAuthority(authority.getAuthority()))
 						.collect(Collectors.toList()));
