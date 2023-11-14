@@ -49,6 +49,11 @@ public class User implements UserDetails {
 	public Collection<? extends GrantedAuthority> getAuthorities() {
 		return authorities;
 	}
+	
+	public void setAuthorities(Collection<Authority> authorities) {
+	    this.authorities = authorities;
+	}
+
 
 	public Integer getId() {
 		return id;

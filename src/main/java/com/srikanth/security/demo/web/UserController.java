@@ -6,6 +6,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import java.util.HashMap;
 
@@ -48,13 +49,13 @@ public class UserController {
 //        
 //        return ResponseEntity.ok(savedUser);
 //    }
-    @PostMapping("")
-    public ResponseEntity<AuthenticationResponse> signUpUser (@RequestBody User user) {
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
-        User savedUser = userRepository.save(user);
-        
-        String accessToken = jwtService.generateToken(new HashMap<>(), savedUser);
-        RefreshToken refreshToken = refreshTokenService.generateRefreshToken(savedUser.getId());
+	@PostMapping("/signup")
+	public ResponseEntity<AuthenticationResponse> signUpUser(@RequestParam String username,
+			@RequestParam String password, @RequestParam String roleName) {
+		User savedUser = userService.registerNewUser(username, password, roleName);
+
+		String accessToken = jwtService.generateToken(new HashMap<>(), savedUser);
+		RefreshToken refreshToken = refreshTokenService.generateRefreshToken(savedUser.getId());
 
 		return ResponseEntity
 				.ok(new AuthenticationResponse(savedUser.getUsername(), accessToken, refreshToken.getRefreshToken()));

@@ -1,0 +1,9 @@
+CREATE TABLE IF NOT EXISTS authority (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL
+);
+
+INSERT INTO authority (name) VALUES ('ROLE_USER');
+INSERT INTO authority (name) VALUES ('ROLE_ADMIN');
+INSERT INTO authority (name) VALUES ('ROLE_BLUE');
+INSERT INTO authority (name) VALUES ('ROLE_RED');
