@@ -1,5 +1,6 @@
 package com.srikanth.security.demo.security;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationProvider;
@@ -24,6 +25,7 @@ import org.springframework.security.core.Authentication;
 
 import com.srikanth.security.demo.domain.RefreshToken;
 import com.srikanth.security.demo.domain.User;
+import com.srikanth.security.demo.repository.AuthorityRepository;
 import com.srikanth.security.demo.repository.UserRepository;
 import com.srikanth.security.demo.service.JwtService;
 import com.srikanth.security.demo.service.RefreshTokenService;
@@ -41,6 +43,10 @@ public class SecurityConfiguration {
 	private JwtAuthenticationFilter jwtAuthenticationFilter;
 	private JwtService jwtService;
 	private RefreshTokenService refreshTokenService;
+	private AuthorityRepository authorityRepository;
+	private PasswordEncoder passwordEncoder;
+	@Autowired
+    private UserService userService;
 
 	public SecurityConfiguration(UserRepository userRepository, JwtAuthenticationFilter jwtAuthenticationFilter,
 			JwtService jwtService, RefreshTokenService refreshTokenService) {
@@ -60,7 +66,7 @@ public class SecurityConfiguration {
 	// User Details Service: Load user by user name:
 	@Bean
 	public UserDetailsService userDetailsService() {
-		return new UserService(userRepository);
+		return userService;
 	}
 
 	@Bean
@@ -116,7 +122,7 @@ public class SecurityConfiguration {
 		System.out.println("authentication is: " + authentication);
 		User user = (User) authentication.getPrincipal();
 		String accessToken = jwtService.generateToken(new HashMap<>(), user);
-		RefreshToken refreshToken = refreshTokenService.generateRefreshToken(user.getId());
+		RefreshToken refreshToken = refreshTokenService.generateRefreshToken(user);
 
 		Cookie accessTokenCookie = CookieUtils.createAccessTokenCookie(accessToken);
 		Cookie refreshTokenCookie = CookieUtils.createRefeshTokenCookie(refreshToken.getRefreshToken());

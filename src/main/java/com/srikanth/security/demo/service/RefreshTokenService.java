@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -18,41 +19,33 @@ public class RefreshTokenService {
 
 	@Value("${jwt.refreshTokenExpirationTimeInMillis}")
 	private Long refreshTokenExpirationTimeInMillis;
-
-	private UserService userService;
 	private RefreshTokenRepository refreshTokenRepository;
 	private JwtService jwtService;
 
-	public RefreshTokenService(UserService userService, RefreshTokenRepository refreshTokenRepository, JwtService jwtService) {
+	public RefreshTokenService(RefreshTokenRepository refreshTokenRepository, JwtService jwtService) {
 		super();
-		this.userService = userService;
 		this.refreshTokenRepository = refreshTokenRepository;
 		this.jwtService = jwtService;
 	}
+	
 
 	// To ensure id is not null, if user in repo, then make refresh token.
 	// Save the new refresh token to our repo and then return the refresh token from
 	// our repo. That is the workflow!
-	public RefreshToken generateRefreshToken(Integer userId) {
+	public RefreshToken generateRefreshToken(User user) {
+	    Optional<RefreshToken> refreshTokenOpt = refreshTokenRepository.findById(user.getId());
 
-		Optional<User> userOpt = userService.findById(userId);
-		if (userOpt.isPresent()) {
-			Optional<RefreshToken> refreshTokenOpt = refreshTokenRepository.findById(userId);
+	    RefreshToken refreshToken = null;
+	    if (refreshTokenOpt.isPresent()) {
+	        refreshToken = refreshTokenOpt.get();
+	        refreshToken.setExpirationDate(getRefreshTokenExpirationDate());
+	        refreshToken.setRefreshToken(generateRandomTokenValue());
+	    } else {
+	        refreshToken = new RefreshToken(user, generateRandomTokenValue(), getRefreshTokenExpirationDate());
+	    }
 
-			RefreshToken refreshToken = null;
-			if (refreshTokenOpt.isPresent()) {
-				refreshToken = refreshTokenOpt.get();
-				refreshToken.setExpirationDate(getRefreshTokenExpirationDate());
-				refreshToken.setRefreshToken(generateRandomTokenValue());
-			} else {
-				refreshToken = new RefreshToken(userOpt.get(), generateRandomTokenValue(),
-						getRefreshTokenExpirationDate());
-			}
-
-			refreshToken = refreshTokenRepository.save(refreshToken);
-			return refreshToken;
-		}
-		return null;
+	    refreshToken = refreshTokenRepository.save(refreshToken);
+	    return refreshToken;
 	}
 
 	private String generateRandomTokenValue() {

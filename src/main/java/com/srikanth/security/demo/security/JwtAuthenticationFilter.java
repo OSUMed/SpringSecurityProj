@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -28,12 +29,10 @@ import org.springframework.stereotype.Component;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private JwtService jwtService;
-    private UserService userService;
     private RefreshTokenService refreshTokenService;
 
-    public JwtAuthenticationFilter(JwtService jwtService, UserService userService, RefreshTokenService refreshTokenService) {
+    public JwtAuthenticationFilter(JwtService jwtService, @Lazy RefreshTokenService refreshTokenService) {
         this.jwtService = jwtService;
-        this.userService = userService;
         this.refreshTokenService = refreshTokenService;
     }
 

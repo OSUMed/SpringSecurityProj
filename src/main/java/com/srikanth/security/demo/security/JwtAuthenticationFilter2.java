@@ -29,7 +29,6 @@ import io.jsonwebtoken.ExpiredJwtException;
 
 import org.springframework.stereotype.Component;
 
-@Component
 // Once per request filter: because it passes by just once
 // Where we get the tokens via req.headers
 public class JwtAuthenticationFilter2 extends OncePerRequestFilter {
