@@ -1,5 +1,5 @@
 package com.srikanth.security.demo.security;
-
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -75,12 +75,19 @@ public class SecurityConfiguration {
 	        .csrf(AbstractHttpConfigurer::disable)
 	        .authorizeHttpRequests(authz -> {
 	            authz
-	                .requestMatchers("/api/v1/users", "/api/v1/users/**", "/free").permitAll() // Public endpoints
-	                .requestMatchers("/admin/**").hasAuthority("ROLE_ADMIN") // Admin-only endpoints
-	                .requestMatchers("/user/**").hasAuthority("ROLE_USER"); // User-only endpoints
+					.requestMatchers(new AntPathRequestMatcher("/api/v1/users")).permitAll()
+		            .requestMatchers(new AntPathRequestMatcher("/api/v1/users/**")).permitAll() 
+		            .requestMatchers(new AntPathRequestMatcher("/h2-console/**")).permitAll() // H2 Database Console
+	                .requestMatchers(new AntPathRequestMatcher("/free")).permitAll() // Public endpoint
+	                .requestMatchers(new AntPathRequestMatcher("/admin/**")).hasAuthority("ROLE_ADMIN") // Admin-only endpoints
+	                .requestMatchers(new AntPathRequestMatcher("/user/**")).hasAuthority("ROLE_USER"); // User-only endpoints
 	            authz
 	                .anyRequest().authenticated(); // All other requests must be authenticated
 	        })
+	        .headers(headers -> headers
+	                // Disable frame options for H2 Console
+	                .frameOptions(frameOptions -> frameOptions.disable())
+	            )
 	        .sessionManagement(manager -> manager.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 	        .authenticationProvider(authenticationProvider())
 	        .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
@@ -88,7 +95,6 @@ public class SecurityConfiguration {
 
 	    return http.build();
 	}
-
 
 //    @Bean
 //    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
