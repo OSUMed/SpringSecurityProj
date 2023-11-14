@@ -35,6 +35,7 @@ public class User implements UserDetails {
         inverseJoinColumns = @JoinColumn(name = "authority_id")
     )
     private Collection<Authority> authorities;
+  
 
 	public User() {
 	}

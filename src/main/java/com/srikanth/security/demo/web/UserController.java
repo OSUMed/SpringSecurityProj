@@ -52,7 +52,7 @@ public class UserController {
 	@PostMapping("/signup")
 	public ResponseEntity<AuthenticationResponse> signUpUser(@RequestParam String username,
 			@RequestParam String password, @RequestParam String roleName) {
-		User savedUser = userService.registerNewUser(username, password, roleName);
+		User savedUser = userService.registerNewUser(username, password);
 
 		String accessToken = jwtService.generateToken(new HashMap<>(), savedUser);
 		RefreshToken refreshToken = refreshTokenService.generateRefreshToken(savedUser);

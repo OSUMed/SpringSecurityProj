@@ -32,10 +32,13 @@ import com.srikanth.security.demo.service.RefreshTokenService;
 import com.srikanth.security.demo.service.UserService;
 import com.srikanth.security.demo.util.CookieUtils;
 
+import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.web.authentication.AuthenticationFailureHandler;
+import org.springframework.stereotype.Component;
 @Configuration
 @EnableWebSecurity
 public class SecurityConfiguration {
@@ -80,7 +83,8 @@ public class SecurityConfiguration {
 		            .requestMatchers(new AntPathRequestMatcher("/h2-console/**")).permitAll() // H2 Database Console
 	                .requestMatchers(new AntPathRequestMatcher("/free")).permitAll() // Public endpoint
 	                .requestMatchers(new AntPathRequestMatcher("/admin/**")).hasAuthority("ROLE_ADMIN") // Admin-only endpoints
-	                .requestMatchers(new AntPathRequestMatcher("/user/**")).hasAuthority("ROLE_USER"); // User-only endpoints
+	                .requestMatchers(new AntPathRequestMatcher("/user/**")).hasAuthority("ROLE_USER") // User-only endpoints
+	                .requestMatchers(new AntPathRequestMatcher("/products")).hasAuthority("ROLE_RED"); // User-only endpoints
 	            authz
 	                .anyRequest().authenticated(); // All other requests must be authenticated
 	        })
@@ -118,15 +122,21 @@ public class SecurityConfiguration {
 //    }
 //    
 	private void configureFormLogin(FormLoginConfigurer<HttpSecurity> login) {
+		System.out.println("We are loggin in...");
 		login.loginPage("/viewlogin").failureUrl("/login-error").successHandler(this::onAuthenticationSuccess)
+																.failureHandler(this::onAuthenticationFailure) // Set the custom failure handler
 				.permitAll();
 	}
 
 	// Auth successful? -> Create the access/refresh tokens and add to response:
 	private void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
 			Authentication authentication) throws IOException {
-		System.out.println("authentication is: " + authentication);
-		User user = (User) authentication.getPrincipal();
+	    // Get the authenticated user's details (principal)
+	    User user = (User) authentication.getPrincipal();
+
+	    // Log user details
+	    System.out.println("Authentication successful for user: " + user.getUsername());
+	    System.out.println("User Authorities/Roles: " + user.getAuthorities());
 		String accessToken = jwtService.generateToken(new HashMap<>(), user);
 		RefreshToken refreshToken = refreshTokenService.generateRefreshToken(user);
 
@@ -137,6 +147,30 @@ public class SecurityConfiguration {
 
 		response.sendRedirect("/products");
 	}
+	
+	public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response,
+	        AuthenticationException exception) throws IOException, ServletException {
+	    // Get the username and password from the login request
+	    String username = request.getParameter("username");
+	    String password = request.getParameter("password");
+	    String role = request.getParameter("roleName");
+
+	    // Log authentication failure details
+	    System.out.println("Authentication failed for user: " + username);
+	    System.out.println("Authentication  failed for user rolen: " + role);
+	    System.out.println("Authentication failure exception: " + exception.getMessage());
+
+	    // Log the provided credentials and expected credentials
+	    System.out.println("Provided Username: " + username);
+	    System.out.println("Provided Password: " + password);
+	    System.out.println("Expected Username: <Your expected username>");
+	    System.out.println("Expected Password: <Your expected password>");
+
+	    // You can perform additional actions here if needed, such as redirecting to an error page
+	    // For now, let's redirect to the login error page
+	    response.sendRedirect("/login-error");
+	}
+
 //    @Bean
 //    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 //        http.csrf(AbstractHttpConfigurer::disable).authorizeHttpRequests((request) -> {
