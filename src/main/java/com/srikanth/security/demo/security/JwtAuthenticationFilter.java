@@ -14,28 +14,36 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.util.StringUtils;
 import com.srikanth.security.demo.service.JwtService;
 import com.srikanth.security.demo.service.UserService;
 import com.srikanth.security.demo.util.CookieUtils;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.web.filter.OncePerRequestFilter;
 
 import io.jsonwebtoken.ExpiredJwtException;
 
 import org.springframework.stereotype.Component;
-
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 @Component
 // Once per request filter: because it passes by just once
 // Where we get the tokens via req.headers
-public class JwtAuthenticationFilter extends OncePerRequestFilter {
+public class JwtAuthenticationFilter extends OncePerRequestFilter implements ApplicationContextAware {
 
 	private JwtService jwtService;
-	private UserService userService;
+    private ApplicationContext applicationContext;
 	private RefreshTokenService refreshTokenService;
 
 	// Requests:
@@ -43,11 +51,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 	// Body -> (if JSON) key/value pairs
 //    String auth = request.getHeader("Authorization");
 
-	public JwtAuthenticationFilter(JwtService jwtService, UserService userService,
+	public JwtAuthenticationFilter(JwtService jwtService, 
 			RefreshTokenService refreshTokenService) {
 		super();
 		this.jwtService = jwtService;
-		this.userService = userService;
 		this.refreshTokenService = refreshTokenService;
 	}
 
@@ -87,7 +94,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 					Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
 					if (StringUtils.hasText(subject) && authentication == null) {
-						UserDetails userDetails = userService.loadUserByUsername(subject);
+						UserDetailsService userDetailsService = applicationContext.getBean(UserDetailsService.class);
+						UserDetails userDetails = userDetailsService.loadUserByUsername(subject);
+						
+//						UserDetails userDetails = userService.loadUserByUsername(subject);
 
 						if (jwtService.isTokenValid(token, userDetails)) {
 							SecurityContext securityContext = SecurityContextHolder.createEmptyContext();
@@ -113,6 +123,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 			}
 		}
 		filterChain.doFilter(request, response);
+	}
+
+	@Override
+	public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+		// TODO Auto-generated method stub
+		this.applicationContext = applicationContext;
+		
 	}
 
 }

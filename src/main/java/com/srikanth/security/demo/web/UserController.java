@@ -50,8 +50,9 @@ public class UserController {
 //    }
     @PostMapping("")
     public ResponseEntity<AuthenticationResponse> signUpUser (@RequestBody User user) {
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
-        User savedUser = userRepository.save(user);
+//        user.setPassword(passwordEncoder.encode(user.getPassword()));
+//        User savedUser = userRepository.save(user);
+    	User savedUser = userService.registerNewUser(user.getUsername(), user.getPassword(), "ROLE_USER");
         
         String accessToken = jwtService.generateToken(new HashMap<>(), savedUser);
         RefreshToken refreshToken = refreshTokenService.generateRefreshToken(savedUser);

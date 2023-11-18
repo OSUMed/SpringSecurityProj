@@ -25,6 +25,7 @@ import org.springframework.security.core.Authentication;
 
 import com.srikanth.security.demo.domain.RefreshToken;
 import com.srikanth.security.demo.domain.User;
+import com.srikanth.security.demo.repository.AuthorityRepository;
 import com.srikanth.security.demo.repository.UserRepository;
 import com.srikanth.security.demo.service.JwtService;
 import com.srikanth.security.demo.service.RefreshTokenService;
@@ -42,19 +43,14 @@ import org.springframework.stereotype.Component;
 @Configuration
 @EnableWebSecurity
 public class SecurityConfiguration {
-	private UserRepository userRepository;
+	@Autowired
 	private JwtAuthenticationFilter jwtAuthenticationFilter;
+	@Autowired
 	private JwtService jwtService;
+	@Autowired
 	private RefreshTokenService refreshTokenService;
-
-	public SecurityConfiguration(UserRepository userRepository, JwtAuthenticationFilter jwtAuthenticationFilter,
-			JwtService jwtService, RefreshTokenService refreshTokenService) {
-		super();
-		this.userRepository = userRepository;
-		this.jwtAuthenticationFilter = jwtAuthenticationFilter;
-		this.jwtService = jwtService;
-		this.refreshTokenService = refreshTokenService;
-	}
+	@Autowired
+    private UserService userService;
 
 	@Bean
 	public PasswordEncoder passwordEncoder() {
@@ -65,7 +61,7 @@ public class SecurityConfiguration {
 	// User Details Service: Load user by user name:
 	@Bean
 	public UserDetailsService userDetailsService() {
-		return new UserService(userRepository);
+		return userService;
 	}
 
 	@Bean
