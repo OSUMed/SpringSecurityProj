@@ -37,6 +37,7 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.stereotype.Component;
 
@@ -99,6 +100,7 @@ public class SecurityConfiguration {
 		login.loginPage("/viewlogin")	// Listens to POST /viewlogin and sends it to spring sec( user details service -> loadUserByUsername )
 			 .successHandler(this::onAuthenticationSuccess) // Set the custom success handler
 			 .failureHandler(this::onAuthenticationFailure) // Set the custom failure handler
+	         .defaultSuccessUrl("/products", false) // Set the default page after login
 			 .permitAll();
 	}
 
@@ -119,7 +121,14 @@ public class SecurityConfiguration {
 		response.addCookie(refreshTokenCookie);
 		response.addCookie(accessTokenCookie);
 
-		response.sendRedirect("/products");
+		String redirectUrl = "/user/welcome"; // default redirect
+	    if (user.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_RED"))) {
+	        redirectUrl = "/red/welcome";
+	    } else if (user.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_BLUE"))) {
+	        redirectUrl = "/blue/welcome";
+	    }
+
+	    response.sendRedirect(redirectUrl);
 	}
 
 	public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response,
