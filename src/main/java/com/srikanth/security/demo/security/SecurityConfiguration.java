@@ -71,12 +71,21 @@ public class SecurityConfiguration {
 	@Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.csrf(AbstractHttpConfigurer::disable)
-          .authorizeHttpRequests((request) -> {
-            request
-                   .requestMatchers("/api/v1/users", "/api/v1/users/**").permitAll()
-                   .requestMatchers("/free").permitAll()
-                   .anyRequest().authenticated();
+        .authorizeHttpRequests(authz -> {
+            authz
+				.requestMatchers(new AntPathRequestMatcher("/api/v1/users")).permitAll()
+	            .requestMatchers(new AntPathRequestMatcher("/api/v1/users/**")).permitAll() 
+	            .requestMatchers(new AntPathRequestMatcher("/h2-console/**")).permitAll() // H2 Database Console
+                .requestMatchers(new AntPathRequestMatcher("/free")).permitAll() // Public endpoint
+                .requestMatchers(new AntPathRequestMatcher("/admin/**")).hasAuthority("ROLE_ADMIN") // Admin-only endpoints
+                .requestMatchers(new AntPathRequestMatcher("/user/**")).hasAuthority("ROLE_USER"); // User-only endpoints
+            authz
+                .anyRequest().authenticated(); // All other requests must be authenticated
         })
+        .headers(headers -> headers
+                // Disable frame options for H2 Console
+                .frameOptions(frameOptions -> frameOptions.disable())
+            )
         .sessionManagement(manager -> manager.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .authenticationProvider(authenticationProvider())
           .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
@@ -88,10 +97,10 @@ public class SecurityConfiguration {
 	}
 
 	private void configureFormLogin(FormLoginConfigurer<HttpSecurity> login) {
-		System.out.println("We are loggin in...");
-		login.loginPage("/viewlogin").failureUrl("/login-error").successHandler(this::onAuthenticationSuccess)
-				.failureHandler(this::onAuthenticationFailure) // Set the custom failure handler
-				.permitAll();
+		login.loginPage("/viewlogin")	// Listens to POST /viewlogin and sends it to spring sec( user details service -> loadUserByUsername )
+			 .successHandler(this::onAuthenticationSuccess) // Set the custom success handler
+			 .failureHandler(this::onAuthenticationFailure) // Set the custom failure handler
+			 .permitAll();
 	}
 
 	// Auth successful? -> Create the access/refresh tokens and add to response:
