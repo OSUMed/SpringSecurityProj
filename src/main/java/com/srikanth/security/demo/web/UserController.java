@@ -3,11 +3,13 @@ package com.srikanth.security.demo.web;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import java.util.HashMap;
+import java.util.List;
 
 import com.srikanth.security.demo.domain.RefreshToken;
 import com.srikanth.security.demo.domain.User;
@@ -52,7 +54,7 @@ public class UserController {
     public ResponseEntity<AuthenticationResponse> signUpUser (@RequestBody User user) {
 //        user.setPassword(passwordEncoder.encode(user.getPassword()));
 //        User savedUser = userRepository.save(user);
-    	User savedUser = userService.registerNewUser(user.getUsername(), user.getPassword(), "ROLE_USER");
+    	User savedUser = userService.registerNewUser(user.getUsername(), user.getPassword());
         
         String accessToken = jwtService.generateToken(new HashMap<>(), savedUser);
         RefreshToken refreshToken = refreshTokenService.generateRefreshToken(savedUser);
@@ -76,5 +78,10 @@ public class UserController {
 			@RequestBody RefreshTokenRequest refreshTokenRequest) {
 		String accessToken = refreshTokenService.createNewAccessToken(refreshTokenRequest);
 		return ResponseEntity.ok(new RefreshTokenResponse(accessToken, refreshTokenRequest.refreshToken()));
+	}
+	
+	@GetMapping("/getusers")
+	public List<User> getUsers() {
+		return userService.getAllUsers();
 	}
 }

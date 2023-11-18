@@ -69,12 +69,15 @@ public class SecurityConfiguration {
         http.csrf(AbstractHttpConfigurer::disable)
         .authorizeHttpRequests(authz -> {
             authz
-				.requestMatchers(new AntPathRequestMatcher("/api/v1/users")).permitAll()
+                .requestMatchers(new AntPathRequestMatcher("/api/v1/users")).permitAll()
+				.requestMatchers(new AntPathRequestMatcher("/allusers")).permitAll()
 	            .requestMatchers(new AntPathRequestMatcher("/api/v1/users/**")).permitAll() 
 	            .requestMatchers(new AntPathRequestMatcher("/h2-console/**")).permitAll() // H2 Database Console
                 .requestMatchers(new AntPathRequestMatcher("/free")).permitAll() // Public endpoint
                 .requestMatchers(new AntPathRequestMatcher("/admin/**")).hasAuthority("ROLE_ADMIN") // Admin-only endpoints
-                .requestMatchers(new AntPathRequestMatcher("/user/**")).hasAuthority("ROLE_USER"); // User-only endpoints
+                .requestMatchers(new AntPathRequestMatcher("/user/**")).hasAuthority("ROLE_USER") // User-only endpoints
+                .requestMatchers(new AntPathRequestMatcher("/blue/**")).hasAuthority("BLUE_USER") // User-only endpoints
+                .requestMatchers(new AntPathRequestMatcher("/red/**")).hasAuthority("RED_USER"); // User-only endpoints
             authz
                 .anyRequest().authenticated(); // All other requests must be authenticated
         })

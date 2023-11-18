@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <title>User Page</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f4f4f4;
+        margin: 0;
+        padding: 20px;
+      }
+      .container {
+        width: 80%;
+        margin: auto;
+        overflow: hidden;
+      }
+      .header {
+        background: #333;
+        color: #fff;
+        padding: 10px;
+        text-align: center;
+      }
+      .main-content {
+        margin-top: 20px;
+        padding: 20px;
+        background: #fff;
+        border-radius: 8px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>Welcome to User Page</h1>
+      </div>
+      <div class="main-content">
+        <h2>Hello <span th:text="${username}">User</span>!</h2>
+        <p>Welcome to your user dashboard.</p>
+      </div>
+    </div>
+  </body>
+</html>

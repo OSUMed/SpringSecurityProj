@@ -1,7 +1,10 @@
 package com.srikanth.security.demo.service;
 
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
+import java.util.Random;
 import java.util.stream.Collectors;
 
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -35,6 +38,10 @@ public class UserService implements UserDetailsService {
 		this.authorityRepository = authorityRepository;
 		this.passwordEncoder = passwordEncoder;
 	}
+	
+	public List<User> getAllUsers() {
+		return userRepository.findAll();
+	}
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
@@ -51,11 +58,22 @@ public class UserService implements UserDetailsService {
         return userRepository.findById(userId);
     }
     
-    public User registerNewUser(String username, String password, String roleName) {
-	    User user = new User(username, passwordEncoder.encode(password));
-	    Authority authority = authorityRepository.findByName(roleName);
-	    user.setAuthorities(Collections.singletonList(authority));
-	    return userRepository.save(user);
-	}
+    public User registerNewUser(String username, String password) {
+        User user = new User(username, passwordEncoder.encode(password));
+
+        // List of possible roles
+        List<String> roles = Arrays.asList("ROLE_BLUE", "ROLE_RED", "ROLE_USER");
+        // Randomly select a role
+        String randomRole = roles.get(new Random().nextInt(roles.size()));
+
+        // Find the authority by name
+        Authority authority = authorityRepository.findByName(randomRole);
+
+        // Set the selected authority
+        user.setAuthorities(Collections.singletonList(authority));
+
+        return userRepository.save(user);
+    }
+
 
 }
