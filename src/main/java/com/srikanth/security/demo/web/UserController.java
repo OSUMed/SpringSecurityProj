@@ -54,7 +54,7 @@ public class UserController {
         User savedUser = userRepository.save(user);
         
         String accessToken = jwtService.generateToken(new HashMap<>(), savedUser);
-        RefreshToken refreshToken = refreshTokenService.generateRefreshToken(savedUser.getId());
+        RefreshToken refreshToken = refreshTokenService.generateRefreshToken(savedUser);
 
 		return ResponseEntity
 				.ok(new AuthenticationResponse(savedUser.getUsername(), accessToken, refreshToken.getRefreshToken()));
@@ -64,7 +64,7 @@ public class UserController {
 	public ResponseEntity<AuthenticationResponse> signInUser(@RequestBody User user) {
 		User loggedInUser = (User) userService.loadUserByUsername(user.getUsername());
 		String accessToken = jwtService.generateToken(new HashMap<>(), loggedInUser);
-		RefreshToken refreshToken = refreshTokenService.generateRefreshToken(loggedInUser.getId());
+		RefreshToken refreshToken = refreshTokenService.generateRefreshToken(loggedInUser);
 
 		return ResponseEntity.ok(
 				new AuthenticationResponse(loggedInUser.getUsername(), accessToken, refreshToken.getRefreshToken()));

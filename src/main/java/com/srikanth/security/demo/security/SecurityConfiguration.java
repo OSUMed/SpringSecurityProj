@@ -1,5 +1,6 @@
 package com.srikanth.security.demo.security;
-
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationProvider;
@@ -8,6 +9,7 @@ import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.annotation.web.configurers.FormLoginConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -29,18 +31,21 @@ import com.srikanth.security.demo.service.RefreshTokenService;
 import com.srikanth.security.demo.service.UserService;
 import com.srikanth.security.demo.util.CookieUtils;
 
+import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.web.authentication.AuthenticationFailureHandler;
+import org.springframework.stereotype.Component;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfiguration {
-    private UserRepository userRepository;
-    private JwtAuthenticationFilter jwtAuthenticationFilter;
-    private JwtService jwtService;
-    private RefreshTokenService refreshTokenService;
-    
-
+	private UserRepository userRepository;
+	private JwtAuthenticationFilter jwtAuthenticationFilter;
+	private JwtService jwtService;
+	private RefreshTokenService refreshTokenService;
 
 	public SecurityConfiguration(UserRepository userRepository, JwtAuthenticationFilter jwtAuthenticationFilter,
 			JwtService jwtService, RefreshTokenService refreshTokenService) {
@@ -52,17 +57,18 @@ public class SecurityConfiguration {
 	}
 
 	@Bean
-    public PasswordEncoder passwordEncoder () {
-	 // On default use
-        return new BCryptPasswordEncoder();
-    }
+	public PasswordEncoder passwordEncoder() {
+		// On default use
+		return new BCryptPasswordEncoder();
+	}
 
 	// User Details Service: Load user by user name:
-    @Bean
-    public UserDetailsService userDetailsService () {
-        return new UserService(userRepository);
-    }
-    @Bean
+	@Bean
+	public UserDetailsService userDetailsService() {
+		return new UserService(userRepository);
+	}
+
+	@Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.csrf(AbstractHttpConfigurer::disable)
           .authorizeHttpRequests((request) -> {
@@ -74,36 +80,64 @@ public class SecurityConfiguration {
         .sessionManagement(manager -> manager.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .authenticationProvider(authenticationProvider())
           .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-        .formLogin(login -> {
-        	login.loginPage("/viewlogin");
-        	login.failureUrl("/login-error");
-        	login.successHandler(new AuthenticationSuccessHandler() {
+        .formLogin(this::configureFormLogin);
 
-				@Override
-				public void onAuthenticationSuccess(HttpServletRequest request,
-						jakarta.servlet.http.HttpServletResponse response, Authentication authentication)
-						throws IOException, jakarta.servlet.ServletException {
-					
-					User user = (User) authentication.getPrincipal();
-					// TODO Auto-generated method stub
-					String accessToken = jwtService.generateToken(new HashMap<>(), user);
-					RefreshToken refreshToken = refreshTokenService.generateRefreshToken(user.getId());
-					
-					Cookie accessTokenCookie = CookieUtils.createAccessTokenCookie(accessToken);
-					Cookie refreshTokenCookie = CookieUtils.createRefeshTokenCookie(refreshToken.getRefreshToken());
-					response.addCookie(refreshTokenCookie);
-					response.addCookie(accessTokenCookie);
-				 
-				  response.sendRedirect("/products");
-					
-				}
-        	});
 
-        	login.permitAll();
-        });
-        
-        return http.build();
-    }
+	return http.build();
+
+	}
+
+	private void configureFormLogin(FormLoginConfigurer<HttpSecurity> login) {
+		System.out.println("We are loggin in...");
+		login.loginPage("/viewlogin").failureUrl("/login-error").successHandler(this::onAuthenticationSuccess)
+				.failureHandler(this::onAuthenticationFailure) // Set the custom failure handler
+				.permitAll();
+	}
+
+	// Auth successful? -> Create the access/refresh tokens and add to response:
+	private void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
+			Authentication authentication) throws IOException {
+		// Get the authenticated user's details (principal)
+		User user = (User) authentication.getPrincipal();
+
+		// Log user details
+		System.out.println("Authentication successful for user: " + user.getUsername());
+		System.out.println("User Authorities/Roles: " + user.getAuthorities());
+		String accessToken = jwtService.generateToken(new HashMap<>(), user);
+		RefreshToken refreshToken = refreshTokenService.generateRefreshToken(user);
+
+		Cookie accessTokenCookie = CookieUtils.createAccessTokenCookie(accessToken);
+		Cookie refreshTokenCookie = CookieUtils.createRefeshTokenCookie(refreshToken.getRefreshToken());
+		response.addCookie(refreshTokenCookie);
+		response.addCookie(accessTokenCookie);
+
+		response.sendRedirect("/products");
+	}
+
+	public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response,
+			AuthenticationException exception) throws IOException, ServletException {
+		// Get the username and password from the login request
+		String username = request.getParameter("username");
+		String password = request.getParameter("password");
+		String role = request.getParameter("roleName");
+
+		// Log authentication failure details
+		System.out.println("Authentication failed for user: " + username);
+		System.out.println("Authentication failed for user rolen: " + role);
+		System.out.println("Authentication failure exception: " + exception.getMessage());
+
+		// Log the provided credentials and expected credentials
+		System.out.println("Provided Username: " + username);
+		System.out.println("Provided Password: " + password);
+		System.out.println("Expected Username: <Your expected username>");
+		System.out.println("Expected Password: <Your expected password>");
+
+		// You can perform additional actions here if needed, such as redirecting to an
+		// error page
+		// For now, let's redirect to the login error page
+		response.sendRedirect("/login-error");
+	}
+
 //    @Bean
 //    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 //        http.csrf(AbstractHttpConfigurer::disable).authorizeHttpRequests((request) -> {
@@ -139,13 +173,13 @@ public class SecurityConfiguration {
 ////                .permitAll();
 //        return http.build();
 //    }
-    
-    @Bean
-    public AuthenticationProvider authenticationProvider () {
-        DaoAuthenticationProvider daoAuthenticationProvider = new DaoAuthenticationProvider();
-        daoAuthenticationProvider.setPasswordEncoder(passwordEncoder());
-        daoAuthenticationProvider.setUserDetailsService(userDetailsService());
-        return daoAuthenticationProvider;
-    }
+
+	@Bean
+	public AuthenticationProvider authenticationProvider() {
+		DaoAuthenticationProvider daoAuthenticationProvider = new DaoAuthenticationProvider();
+		daoAuthenticationProvider.setPasswordEncoder(passwordEncoder());
+		daoAuthenticationProvider.setUserDetailsService(userDetailsService());
+		return daoAuthenticationProvider;
+	}
 
 }
