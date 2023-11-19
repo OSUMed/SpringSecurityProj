@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 import com.srikanth.security.demo.domain.RefreshToken;
 import com.srikanth.security.demo.domain.User;
+import com.srikanth.security.demo.domain.UserDto;
 import com.srikanth.security.demo.repository.RefreshTokenRepository;
 import com.srikanth.security.demo.repository.UserRepository;
 import com.srikanth.security.demo.response.AuthenticationResponse;
@@ -19,9 +20,12 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.HashMap;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 
 @Controller
 public class LoginLogoutController {
@@ -48,7 +52,13 @@ public class LoginLogoutController {
 	}
 
 	@GetMapping("/login")
-	public String loginUser() {
+	public String loginUser(Model model) {
+		List<UserDto> userDtos = userService.getAllUsers().stream()
+				.map(user -> new UserDto(user.getUsername(), user.getAuthorities().stream()
+						.map(GrantedAuthority::getAuthority).collect(Collectors.joining(", "))))
+				.collect(Collectors.toList());
+
+		model.addAttribute("users", userDtos);
 		return "login";
 	}
 
@@ -123,20 +133,21 @@ public class LoginLogoutController {
 		model.addAttribute("teamName", "Red");
 		return "red-1"; // HTML page name should be red-1.html
 	}
-	
+
 	@GetMapping("/green/1")
 	public String welcomeGreen1(Model model) {
 		model.addAttribute("message", "This is green-1");
 		model.addAttribute("teamName", "Green");
 		return "green-1"; // HTML page name should be green-1.html
 	}
-	
+
 	@GetMapping("/blue/1")
 	public String welcomeBlue1(Model model) {
 		model.addAttribute("message", "This is blue-1");
 		model.addAttribute("teamName", "Blue");
 		return "blue-1"; // HTML page name should be blue-1.html
 	}
+
 	@GetMapping("/red/2")
 	public String welcomeRed2(Model model) {
 		model.addAttribute("message", "This is red-2");

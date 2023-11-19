@@ -29,5 +29,20 @@
     </form>
     <!-- Sign-up Link -->
     <a th:href="@{/signup}" class="signup-link">Sign Up</a>
+    <h2>All Users</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Username</th>
+          <th>Roles</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr th:each="user : ${users}">
+          <td th:text="${user.username}">Username</td>
+          <td th:text="${user.roles}">Roles</td>
+        </tr>
+      </tbody>
+    </table>
   </body>
 </html>
