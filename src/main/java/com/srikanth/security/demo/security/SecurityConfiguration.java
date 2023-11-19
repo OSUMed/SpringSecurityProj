@@ -96,7 +96,16 @@ public class SecurityConfiguration {
 //				.sessionManagement(manager -> manager.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 				.authenticationProvider(authenticationProvider())
 				.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-				.formLogin(this::configureFormLogin);
+				.formLogin(this::configureFormLogin)
+				.logout(logoutConfigurer -> {
+			            logoutConfigurer
+			                .logoutUrl("/perform_logout") // URL to trigger the logout
+			                .logoutSuccessUrl("/login") // URL to redirect after logout
+			                .deleteCookies("accessToken") // Cookies to delete upon logout
+			                .deleteCookies("refreshToken") // Cookies to delete upon logout
+			                .invalidateHttpSession(true) // Invalidate session
+			                .clearAuthentication(true); // Clear authentication
+			        });
 
 		return http.build();
 
@@ -112,42 +121,41 @@ public class SecurityConfiguration {
 	}
 
 	public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
-	        Authentication authentication) throws IOException, ServletException {
+			Authentication authentication) throws IOException, ServletException {
 
-	    User user = (User) authentication.getPrincipal(); // Cast to your User domain object
-	    System.out.println("Authentication successful for user: " + user.getUsername());
-	    System.out.println("Authorities: " + user.getAuthorities());
-	    // Log user details
-	    System.out.println("Authentication successful for user: " + user.getUsername());
+		User user = (User) authentication.getPrincipal(); // Cast to your User domain object
+		System.out.println("Authentication successful for user: " + user.getUsername());
+		System.out.println("Authorities: " + user.getAuthorities());
+		// Log user details
+		System.out.println("Authentication successful for user: " + user.getUsername());
 
-	    // Create and add cookies
-	    String accessToken = jwtService.generateToken(new HashMap<>(), user);
-	    RefreshToken refreshToken = refreshTokenService.generateRefreshToken(user);
-	    Cookie accessTokenCookie = CookieUtils.createAccessTokenCookie(accessToken);
-	    Cookie refreshTokenCookie = CookieUtils.createRefeshTokenCookie(refreshToken.getRefreshToken());
-	    response.addCookie(accessTokenCookie);
-	    response.addCookie(refreshTokenCookie);
+		// Create and add cookies
+		String accessToken = jwtService.generateToken(new HashMap<>(), user);
+		RefreshToken refreshToken = refreshTokenService.generateRefreshToken(user);
+		Cookie accessTokenCookie = CookieUtils.createAccessTokenCookie(accessToken);
+		Cookie refreshTokenCookie = CookieUtils.createRefeshTokenCookie(refreshToken.getRefreshToken());
+		response.addCookie(accessTokenCookie);
+		response.addCookie(refreshTokenCookie);
 
-	    // Determine the redirect URL based on the user's authorities
-	    String redirectUrl = determineRedirectUrl(user.getAuthorities());
-	    System.out.println("Redirecting to: " + redirectUrl);
+		// Determine the redirect URL based on the user's authorities
+		String redirectUrl = determineRedirectUrl(user.getAuthorities());
+		System.out.println("Redirecting to: " + redirectUrl);
 
-	    // Perform the redirect
-	    response.sendRedirect(redirectUrl);
+		// Perform the redirect
+		response.sendRedirect(redirectUrl);
 	}
 
 	private String determineRedirectUrl(Collection<? extends GrantedAuthority> authorities) {
-	    if (authorities.stream().anyMatch(a -> "ROLE_RED".equals(a.getAuthority()))) {
-	        return "/red/welcome";
-	    } else if (authorities.stream().anyMatch(a -> "ROLE_BLUE".equals(a.getAuthority()))) {
-	        return "/blue/welcome";
-	    } else if (authorities.stream().anyMatch(a -> "ROLE_GREEN".equals(a.getAuthority()))) {
-	        return "/green/welcome";
-	    } else {
-	        return "/user/welcome"; // Default redirect URL
-	    }
+		if (authorities.stream().anyMatch(a -> "ROLE_RED".equals(a.getAuthority()))) {
+			return "/red/welcome";
+		} else if (authorities.stream().anyMatch(a -> "ROLE_BLUE".equals(a.getAuthority()))) {
+			return "/blue/welcome";
+		} else if (authorities.stream().anyMatch(a -> "ROLE_GREEN".equals(a.getAuthority()))) {
+			return "/green/welcome";
+		} else {
+			return "/user/welcome"; // Default redirect URL
+		}
 	}
-
 
 	public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response,
 			AuthenticationException exception) throws IOException, ServletException {
