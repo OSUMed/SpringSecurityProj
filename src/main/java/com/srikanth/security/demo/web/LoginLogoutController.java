@@ -47,15 +47,18 @@ public class LoginLogoutController {
     	return "signup";
 	}
     @PostMapping("/signup")
-    public String signUpUser (@RequestBody User user) {
-//        user.setPassword(passwordEncoder.encode(user.getPassword()));
-//        User savedUser = userRepository.save(user);
-    	userService.registerNewUser(user.getUsername(), user.getPassword());
+    public String signUpUser (User user) {
+    	System.out.println("user is: " + user);
+    	User savedUser = userService.registerNewUser(user.getUsername(), user.getPassword());
     	return "redirect:/login";
     }
 
 	@GetMapping("login")
-	public String viewLogin() {
+	public String viewLogin(User user) {
+		User loggedInUser = (User) userService.loadUserByUsername(user.getUsername());
+		String accessToken = jwtService.generateToken(new HashMap<>(), loggedInUser);
+		RefreshToken refreshToken = refreshTokenService.generateRefreshToken(loggedInUser);
+
 		return "login";
 	}
 	@GetMapping("login-error")

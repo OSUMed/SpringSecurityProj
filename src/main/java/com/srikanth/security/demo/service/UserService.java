@@ -74,8 +74,11 @@ public class UserService implements UserDetailsService {
         // Set the selected authority
         user.setAuthorities(Collections.singletonList(authority));
 
+        
         return userRepository.save(user);
     }
+    
+
 
 
 }

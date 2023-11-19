@@ -64,7 +64,7 @@ public class UserController {
 	}
 
 	@PostMapping("/login")
-	public ResponseEntity<AuthenticationResponse> signInUser(@RequestBody User user) {
+	public ResponseEntity<AuthenticationResponse> loginUser(@RequestBody User user) {
 		User loggedInUser = (User) userService.loadUserByUsername(user.getUsername());
 		String accessToken = jwtService.generateToken(new HashMap<>(), loggedInUser);
 		RefreshToken refreshToken = refreshTokenService.generateRefreshToken(loggedInUser);
