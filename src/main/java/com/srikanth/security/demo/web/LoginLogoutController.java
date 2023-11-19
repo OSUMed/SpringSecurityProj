@@ -42,9 +42,13 @@ public class LoginLogoutController {
 		this.refreshTokenService = refreshTokenService;
 	}
 	
-    @GetMapping("/signup")
-    public String getsignUpUser () {
-    	return "signup";
+	@GetMapping("/signup")
+	public String getsignUpUser () {
+		return "signup";
+	}
+    @GetMapping("/login")
+    public String loginUser () {
+    	return "login";
 	}
     @PostMapping("/signup")
     public String signUpUser (User user) {
@@ -53,14 +57,6 @@ public class LoginLogoutController {
     	return "redirect:/login";
     }
 
-	@GetMapping("login")
-	public String viewLogin(User user) {
-		User loggedInUser = (User) userService.loadUserByUsername(user.getUsername());
-		String accessToken = jwtService.generateToken(new HashMap<>(), loggedInUser);
-		RefreshToken refreshToken = refreshTokenService.generateRefreshToken(loggedInUser);
-
-		return "login";
-	}
 	@GetMapping("login-error")
 	public String loginError(Model model) {
 		model.addAttribute("loginError", true);
@@ -78,7 +74,7 @@ public class LoginLogoutController {
 		model.addAttribute("username", currentUserName);
 		return "user";
 	}
-	@GetMapping("red/welcome")
+	@GetMapping("/red/welcome")
 	public String welcomeRedUsers(Model model) {
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 		String currentUserName = null;
@@ -90,8 +86,20 @@ public class LoginLogoutController {
 		model.addAttribute("username", currentUserName);
 		return "red-user";
 	}
-	@GetMapping("blue/welcome")
+	@GetMapping("/blue/welcome")
 	public String welcomeBlueUsers(Model model) {
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+		String currentUserName = null;
+		
+		if (authentication != null) {
+			currentUserName = authentication.getName(); // This gets the username
+		}
+		
+		model.addAttribute("username", currentUserName);
+		return "blue-user";
+	}
+	@GetMapping("/green/welcome")
+	public String welcomeGreenUsers(Model model) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String currentUserName = null;
 
@@ -100,7 +108,7 @@ public class LoginLogoutController {
         }
 
         model.addAttribute("username", currentUserName);
-		return "blue-user";
+		return "green-user";
 	}
 
 }

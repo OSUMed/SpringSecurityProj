@@ -8,6 +8,7 @@ INSERT INTO authority (name) VALUES ('ROLE_USER');
 INSERT INTO authority (name) VALUES ('ROLE_ADMIN');
 INSERT INTO authority (name) VALUES ('ROLE_BLUE');
 INSERT INTO authority (name) VALUES ('ROLE_RED');
+INSERT INTO authority (name) VALUES ('ROLE_GREEN');
 
 -- SQL to create and populate the 'users' table
 CREATE TABLE IF NOT EXISTS users (

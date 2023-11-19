@@ -1,4 +1,5 @@
 package com.srikanth.security.demo.security;
+
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -19,7 +20,9 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.stream.Collectors;
 
 import org.springframework.security.core.Authentication;
 
@@ -37,6 +40,7 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.stereotype.Component;
@@ -51,7 +55,7 @@ public class SecurityConfiguration {
 	@Autowired
 	private RefreshTokenService refreshTokenService;
 	@Autowired
-    private UserService userService;
+	private UserService userService;
 
 	@Bean
 	public PasswordEncoder passwordEncoder() {
@@ -66,71 +70,84 @@ public class SecurityConfiguration {
 	}
 
 	@Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http.csrf(AbstractHttpConfigurer::disable)
-        .authorizeHttpRequests(authz -> {
-            authz
-                .requestMatchers(new AntPathRequestMatcher("/api/v1/users")).permitAll()
-				.requestMatchers(new AntPathRequestMatcher("/allusers")).permitAll()
-	            .requestMatchers(new AntPathRequestMatcher("/api/v1/users/**")).permitAll() 
-	            .requestMatchers(new AntPathRequestMatcher("/h2-console/**")).permitAll() // H2 Database Console
-	            .requestMatchers(new AntPathRequestMatcher("/free")).permitAll() // Public endpoint
-                .requestMatchers(new AntPathRequestMatcher("/signup")).permitAll() // Public endpoint
-                .requestMatchers(new AntPathRequestMatcher("/admin/**")).hasAuthority("ROLE_ADMIN") // Admin-only endpoints
-                .requestMatchers(new AntPathRequestMatcher("/user/**")).hasAuthority("ROLE_USER") // User-only endpoints
-                .requestMatchers(new AntPathRequestMatcher("/blue/**")).hasAuthority("BLUE_USER") // User-only endpoints
-                .requestMatchers(new AntPathRequestMatcher("/red/**")).hasAuthority("RED_USER"); // User-only endpoints
-            authz
-                .anyRequest().authenticated(); // All other requests must be authenticated
-        })
-        .headers(headers -> headers
-                // Disable frame options for H2 Console
-                .frameOptions(frameOptions -> frameOptions.disable())
-            )
-        .sessionManagement(manager -> manager.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-        .authenticationProvider(authenticationProvider())
-          .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-        .formLogin(this::configureFormLogin);
+	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+		http.csrf(AbstractHttpConfigurer::disable).authorizeHttpRequests(authz -> {
+			authz.requestMatchers(new AntPathRequestMatcher("/api/v1/users")).permitAll()
+					.requestMatchers(new AntPathRequestMatcher("/allusers")).permitAll()
+					.requestMatchers(new AntPathRequestMatcher("/api/v1/users/**")).permitAll()
+					.requestMatchers(new AntPathRequestMatcher("/h2-console/**")).permitAll() // H2 Database Console
+					.requestMatchers(new AntPathRequestMatcher("/free")).permitAll() // Public endpoint
+					.requestMatchers(new AntPathRequestMatcher("/signup")).permitAll() // Public endpoint
+					.requestMatchers(new AntPathRequestMatcher("/user/welcome")).authenticated() // Public endpoint
+					.requestMatchers(new AntPathRequestMatcher("/admin/**")).hasAuthority("ROLE_ADMIN") // Admin-only
+																										// endpoints
+					.requestMatchers(new AntPathRequestMatcher("/user/**")).hasAuthority("ROLE_USER") // User-only
+																										// endpoints
+					.requestMatchers(new AntPathRequestMatcher("/blue/**")).hasAuthority("ROLE_BLUE") // User-only
+																										// endpoints
+					.requestMatchers(new AntPathRequestMatcher("/red/**")).hasAuthority("ROLE_RED") // User-only
+																									// endpoints
+					.requestMatchers(new AntPathRequestMatcher("/green/**")).hasAuthority("ROLE_GREEN"); // User-only
+																											// endpoints
+			authz.anyRequest().authenticated(); // All other requests must be authenticated
+		}).headers(headers -> headers
+				// Disable frame options for H2 Console
+				.frameOptions(frameOptions -> frameOptions.disable()))
+//				.sessionManagement(manager -> manager.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+				.authenticationProvider(authenticationProvider())
+				.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+				.formLogin(this::configureFormLogin);
 
-
-	return http.build();
+		return http.build();
 
 	}
 
 	private void configureFormLogin(FormLoginConfigurer<HttpSecurity> login) {
-		login.loginPage("/login")	// Listens to POST /viewlogin and sends it to spring sec( user details service -> loadUserByUsername )
-			 .successHandler(this::onAuthenticationSuccess) // Set the custom success handler
-			 .failureHandler(this::onAuthenticationFailure) // Set the custom failure handler
-	         .defaultSuccessUrl("/products", false) // Set the default page after login
-			 .permitAll();
+		login.loginPage("/login") // Listens to POST /viewlogin and sends it to spring sec( user details service
+									// -> loadUserByUsername )
+				.successHandler(this::onAuthenticationSuccess) // Set the custom success handler
+				.failureHandler(this::onAuthenticationFailure) // Set the custom failure handler
+//	         .defaultSuccessUrl("/products", false) // Set the default page after login
+				.permitAll();
 	}
 
-	// Auth successful? -> Create the access/refresh tokens and add to response:
-	private void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
-			Authentication authentication) throws IOException {
-		// Get the authenticated user's details (principal)
-		User user = (User) authentication.getPrincipal();
+	public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
+	        Authentication authentication) throws IOException, ServletException {
 
-		// Log user details
-		System.out.println("Authentication successful for user: " + user.getUsername());
-		System.out.println("User Authorities/Roles: " + user.getAuthorities());
-		String accessToken = jwtService.generateToken(new HashMap<>(), user);
-		RefreshToken refreshToken = refreshTokenService.generateRefreshToken(user);
+	    User user = (User) authentication.getPrincipal(); // Cast to your User domain object
+	    System.out.println("Authentication successful for user: " + user.getUsername());
+	    System.out.println("Authorities: " + user.getAuthorities());
+	    // Log user details
+	    System.out.println("Authentication successful for user: " + user.getUsername());
 
-		Cookie accessTokenCookie = CookieUtils.createAccessTokenCookie(accessToken);
-		Cookie refreshTokenCookie = CookieUtils.createRefeshTokenCookie(refreshToken.getRefreshToken());
-		response.addCookie(refreshTokenCookie);
-		response.addCookie(accessTokenCookie);
+	    // Create and add cookies
+	    String accessToken = jwtService.generateToken(new HashMap<>(), user);
+	    RefreshToken refreshToken = refreshTokenService.generateRefreshToken(user);
+	    Cookie accessTokenCookie = CookieUtils.createAccessTokenCookie(accessToken);
+	    Cookie refreshTokenCookie = CookieUtils.createRefeshTokenCookie(refreshToken.getRefreshToken());
+	    response.addCookie(accessTokenCookie);
+	    response.addCookie(refreshTokenCookie);
 
-		String redirectUrl = "/user/welcome"; // default redirect
-	    if (user.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_RED"))) {
-	        redirectUrl = "/red/welcome";
-	    } else if (user.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_BLUE"))) {
-	        redirectUrl = "/blue/welcome";
-	    }
+	    // Determine the redirect URL based on the user's authorities
+	    String redirectUrl = determineRedirectUrl(user.getAuthorities());
+	    System.out.println("Redirecting to: " + redirectUrl);
 
+	    // Perform the redirect
 	    response.sendRedirect(redirectUrl);
 	}
+
+	private String determineRedirectUrl(Collection<? extends GrantedAuthority> authorities) {
+	    if (authorities.stream().anyMatch(a -> "ROLE_RED".equals(a.getAuthority()))) {
+	        return "/red/welcome";
+	    } else if (authorities.stream().anyMatch(a -> "ROLE_BLUE".equals(a.getAuthority()))) {
+	        return "/blue/welcome";
+	    } else if (authorities.stream().anyMatch(a -> "ROLE_GREEN".equals(a.getAuthority()))) {
+	        return "/green/welcome";
+	    } else {
+	        return "/user/welcome"; // Default redirect URL
+	    }
+	}
+
 
 	public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response,
 			AuthenticationException exception) throws IOException, ServletException {

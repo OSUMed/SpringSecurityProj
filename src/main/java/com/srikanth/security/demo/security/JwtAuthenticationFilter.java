@@ -91,6 +91,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter implements App
 
 				try {
 					String subject = jwtService.getSubject(token);
+					System.out.println("Token parsed successfully for subject: " + subject);
 					Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
 					if (StringUtils.hasText(subject) && authentication == null) {

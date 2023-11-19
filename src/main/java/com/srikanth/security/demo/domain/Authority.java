@@ -40,4 +40,9 @@ public class Authority implements GrantedAuthority {
 		this.name = name;
 	}
 	
+	 @Override
+	    public String toString() {
+	        return name; // This will print the authority property
+	    }
+	
 }

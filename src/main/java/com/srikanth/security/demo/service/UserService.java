@@ -45,16 +45,17 @@ public class UserService implements UserDetailsService {
 		return userRepository.findAll();
 	}
 
-    @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        
-//        User user = new User(username, passwordEncoder.encode("abc123"));
-    	User user = userRepository.findByUsername(username);
-        
-        if (user == null) throw new UsernameNotFoundException("Bad Credentials");
-        
-        return user;
-    }
+	@Override
+	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+	    User user = userRepository.findByUsername(username);
+	    if (user == null) {
+	        System.out.println("User not found with username: " + username);
+	        throw new UsernameNotFoundException("User not found");
+	    }
+	    System.out.println("User found: " + username + ", Authorities: " + user.getAuthorities());
+	    return user;
+	}
+
 
     public Optional<User> findById (Integer userId) {
         return userRepository.findById(userId);
@@ -64,7 +65,7 @@ public class UserService implements UserDetailsService {
         User user = new User(username, passwordEncoder.encode(password));
 
         // List of possible roles
-        List<String> roles = Arrays.asList("ROLE_BLUE", "ROLE_RED", "ROLE_USER");
+        List<String> roles = Arrays.asList("ROLE_BLUE", "ROLE_RED", "ROLE_GREEN");
         // Randomly select a role
         String randomRole = roles.get(new Random().nextInt(roles.size()));
 
