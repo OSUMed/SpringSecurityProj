@@ -28,6 +28,10 @@
         border-radius: 8px;
         box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
       }
+      .unauthorized {
+        color: #999;
+        text-decoration: none;
+      }
     </style>
   </head>
   <body>
@@ -38,6 +42,46 @@
       <div class="main-content">
         <h2>Hello <span th:text="${username}">User</span>!</h2>
         <p>Welcome to your user dashboard.</p>
+        <p>Welcome to your dashboard. Only authorized to your team's sites:</p>
+        <div>
+          <a
+            th:href="@{/blue/1}"
+            th:class="${teamName} == 'Blue' ? '' : 'unauthorized'"
+            target="_blank"
+            >Blue Page 1</a
+          >
+          <a
+            th:href="@{/red/1}"
+            th:class="${teamName} == 'Red' ? '' : 'unauthorized'"
+            target="_blank"
+            >Red Page 1</a
+          >
+          <a
+            th:href="@{/green/1}"
+            th:class="${teamName} == 'Green' ? '' : 'unauthorized'"
+            target="_blank"
+            >Green Page 1</a
+          >
+          <a
+            th:href="@{/blue/2}"
+            th:class="${teamName} == 'Blue' ? '' : 'unauthorized'"
+            target="_blank"
+            >Blue Page 2</a
+          >
+          <a
+            th:href="@{/red/2}"
+            th:class="${teamName} == 'Red' ? '' : 'unauthorized'"
+            target="_blank"
+            >Red Page 2</a
+          >
+          <a
+            th:href="@{/green/2}"
+            th:class="${teamName} == 'Green' ? '' : 'unauthorized'"
+            target="_blank"
+            >Green Page 2</a
+          >
+          <!-- Add more links as needed -->
+        </div>
       </div>
     </div>
   </body>

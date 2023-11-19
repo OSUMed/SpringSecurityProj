@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Red-1 Page</title>
+    <style>
+      body {
+        background-color: #ffcccc; /* Light red background */
+        color: #8b0000; /* Dark red text */
+        font-family: Arial, sans-serif;
+      }
+      h1 {
+        text-align: center;
+        margin-top: 50px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1 th:text="${message}">This is red-1</h1>
+  </body>
+</html>

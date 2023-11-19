@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Blue-1 Page</title>
+    <style>
+      body {
+        background-color: #ccccff; /* Light blue background */
+        color: #00008b; /* Dark blue text */
+        font-family: Arial, sans-serif;
+      }
+      h1 {
+        text-align: center;
+        margin-top: 50px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1 th:text="${message}">This is blue-1</h1>
+  </body>
+</html>
