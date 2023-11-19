@@ -74,7 +74,8 @@ public class SecurityConfiguration {
 				.requestMatchers(new AntPathRequestMatcher("/allusers")).permitAll()
 	            .requestMatchers(new AntPathRequestMatcher("/api/v1/users/**")).permitAll() 
 	            .requestMatchers(new AntPathRequestMatcher("/h2-console/**")).permitAll() // H2 Database Console
-                .requestMatchers(new AntPathRequestMatcher("/free")).permitAll() // Public endpoint
+	            .requestMatchers(new AntPathRequestMatcher("/free")).permitAll() // Public endpoint
+                .requestMatchers(new AntPathRequestMatcher("/signup")).permitAll() // Public endpoint
                 .requestMatchers(new AntPathRequestMatcher("/admin/**")).hasAuthority("ROLE_ADMIN") // Admin-only endpoints
                 .requestMatchers(new AntPathRequestMatcher("/user/**")).hasAuthority("ROLE_USER") // User-only endpoints
                 .requestMatchers(new AntPathRequestMatcher("/blue/**")).hasAuthority("BLUE_USER") // User-only endpoints
@@ -97,7 +98,7 @@ public class SecurityConfiguration {
 	}
 
 	private void configureFormLogin(FormLoginConfigurer<HttpSecurity> login) {
-		login.loginPage("/viewlogin")	// Listens to POST /viewlogin and sends it to spring sec( user details service -> loadUserByUsername )
+		login.loginPage("/login")	// Listens to POST /viewlogin and sends it to spring sec( user details service -> loadUserByUsername )
 			 .successHandler(this::onAuthenticationSuccess) // Set the custom success handler
 			 .failureHandler(this::onAuthenticationFailure) // Set the custom failure handler
 	         .defaultSuccessUrl("/products", false) // Set the default page after login

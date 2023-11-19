@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Signup page</title>
+    <style>
+      .error {
+        color: red;
+      }
+      .form-group {
+        margin-bottom: 15px;
+      }
+      label,
+      input {
+        width: 33%;
+        display: block;
+      }
+      input[type="text"],
+      input[type="password"] {
+        padding: 8px;
+      }
+      input[type="submit"] {
+        padding: 10px 15px;
+        background-color: #4caf50;
+        color: white;
+        border: none;
+        cursor: pointer;
+      }
+      input[type="submit"]:hover {
+        background-color: #45a049;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Signup page</h1>
+    <form th:action="@{/signup}" method="post">
+      <div class="form-group">
+        <label for="username">Username:</label>
+        <input type="text" id="username" name="username" required />
+      </div>
+      <div class="form-group">
+        <label for="password">Password:</label>
+        <input type="password" id="password" name="password" required />
+      </div>
+      <input type="submit" value="Sign up" />
+    </form>
+  </body>
+</html>
