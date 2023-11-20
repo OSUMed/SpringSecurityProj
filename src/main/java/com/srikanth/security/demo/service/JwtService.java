@@ -33,10 +33,12 @@ public class JwtService {
     @Value("${jwt.expirationTimeInMillis}")
     private Long expirationTimeInMillis;
     
-    public String generateToken(Map<String, Object> extraClaims, UserDetails user) {
+    public String generateToken(Map<String, Object> claims, UserDetails user) {
+       // Add user roles to the claims
+       claims.put("roles", user.getAuthorities());
         
        String jwt = Jwts.builder()
-            .setClaims(extraClaims)
+            .setClaims(claims)
             .setSubject(user.getUsername())
             .setIssuedAt(new Date())
             .setHeaderParam("typ", Header.JWT_TYPE)
