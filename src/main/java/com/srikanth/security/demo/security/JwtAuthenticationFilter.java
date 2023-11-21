@@ -103,14 +103,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter implements App
 	                System.out.println("Refresh Token Expired!");
 	                e1.printStackTrace();
 	                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-	                response.sendRedirect("/bad-token"); // Redirect to the "Bad Token" view
+	                response.sendRedirect("/logout"); // Redirect to the "Bad Token" view
 	                return; // Important to return and not continue the filter chain
 	            } catch (Exception e1) {
 	                // Handle other exceptions during token refresh
 	            	System.out.println("e1 Refreshh Token Expired!");
 	                e1.printStackTrace();
 	                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-	                response.sendRedirect("/bad-token"); // Redirect to the "Bad Token" view
+	                response.sendRedirect("/logout"); // Redirect to the "Bad Token" view
 	                return; // Important to return and not continue the filter chain
 	            }
 	        } catch (Exception e) {
