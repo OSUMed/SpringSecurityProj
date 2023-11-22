@@ -3,6 +3,7 @@ package com.srikanth.security.demo.web;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -22,7 +23,6 @@ import com.srikanth.security.demo.service.RefreshTokenService;
 import com.srikanth.security.demo.service.UserService;
 
 @RestController
-@RequestMapping("/api/v1/users")
 public class UserController {
 	private UserRepository userRepository;
 	private PasswordEncoder passwordEncoder;
@@ -49,21 +49,27 @@ public class UserController {
 //        
 //        return ResponseEntity.ok(savedUser);
 //    }
+	
+	@GetMapping("/test")
+	public String getBase() {
+		
+		System.out.println("get base triggered");
+		return "Get Base!";
+	}
 	@PostMapping("/signup")
-	public ResponseEntity<AuthenticationResponse> signUpUser(@RequestParam String username,
-			@RequestParam String password, @RequestParam String roleName) {
-		User savedUser = userService.registerNewUser(username, password);
+	public ResponseEntity<AuthenticationResponse> signUpUser(@RequestBody User user) {
+		
+		User savedUser = userService.registerNewUser(user.getUsername(), user.getPassword());
 
 		String accessToken = jwtService.generateToken(new HashMap<>(), savedUser);
 		RefreshToken refreshToken = refreshTokenService.generateRefreshToken(savedUser);
-
 		return ResponseEntity
 				.ok(new AuthenticationResponse(savedUser.getUsername(), accessToken, refreshToken.getRefreshToken()));
 	}
 
 	@PostMapping("/login")
 	public ResponseEntity<AuthenticationResponse> signInUser(@RequestBody User user) {
-		User loggedInUser = (User) userService.loadUserByUsername(user.getUsername());
+		User loggedInUser = userService.loadUserByUsername(user.getUsername());
 		String accessToken = jwtService.generateToken(new HashMap<>(), loggedInUser);
 		RefreshToken refreshToken = refreshTokenService.generateRefreshToken(loggedInUser);
 
