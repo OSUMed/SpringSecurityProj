@@ -33,7 +33,8 @@ public class RefreshTokenService {
 	// Save the new refresh token to our repo and then return the refresh token from
 	// our repo. That is the workflow!
 	public RefreshToken generateRefreshToken(User user) {
-	    Optional<RefreshToken> refreshTokenOpt = refreshTokenRepository.findById(user.getId());
+	    Optional<RefreshToken> refreshTokenOpt = refreshTokenRepository.findByUser(user);
+
 
 	    RefreshToken refreshToken = null;
 	    if (refreshTokenOpt.isPresent()) {
