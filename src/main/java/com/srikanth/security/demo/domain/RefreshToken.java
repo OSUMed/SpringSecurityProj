@@ -13,6 +13,8 @@ import jakarta.persistence.OneToOne;
 public class RefreshToken {
         @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
         private Long id;
+        // Create Uni-directional relationship bw Refresh Tokens and User:
+        // user_id is the foreign key in the RefreshToken table that references the id column of the User table:
         @OneToOne
         @JoinColumn(name="user_id", referencedColumnName = "id")
         private User user;
