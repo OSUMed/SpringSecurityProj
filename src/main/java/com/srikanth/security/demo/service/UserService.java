@@ -40,38 +40,40 @@ public class UserService implements UserDetailsService {
 	}
 
 	@Override
-	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+	public User loadUserByUsername(String username) throws UsernameNotFoundException {
 	    User user = userRepository.findByUsername(username);
 	    if (user == null) {
 	        throw new UsernameNotFoundException("User not found with username: " + username);
 	    }
+	    return user;
+	}
 	    
-	    // Get the roleName from the request
-	    HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
-	    String roleName = request.getParameter("roleName");
-
-	    // Use the roleName to set the user's authorities
-	    Authority authority_ui = authorityRepository.findByName(roleName);
-	    user.setAuthorities(Collections.singletonList(authority_ui));
+//	    // Get the roleName from the request
+//	    HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
+//	    String roleName = request.getParameter("roleName");
+//
+//	    // Use the roleName to set the user's authorities
+//	    Authority authority_ui = authorityRepository.findByName(roleName);
+//	    user.setAuthorities(Collections.singletonList(authority_ui));
 
 	    // Create UserDetails from the loaded user
-	    UserDetails userDetails = new org.springframework.security.core.userdetails.User(
-	            user.getUsername(),
-	            user.getPassword(),
-	            user.getAuthorities().stream()
-	                    .map(authority -> new SimpleGrantedAuthority(authority.getAuthority()))
-	                    .collect(Collectors.toList())
-	    );
-
-	    // Print the UserDetails object and authorities
-	    System.out.println("Loaded UserDetails: " + userDetails);
-	    System.out.println("Authorities/Roles: " + userDetails.getAuthorities());
-
-	    String encodedPassword = userDetails.getPassword();
-	    System.out.println("Encoded Password: " + encodedPassword);
-
-	    return userDetails;
-	}
+//	    UserDetails userDetails = new org.springframework.security.core.userdetails.User(
+//	            user.getUsername(),
+//	            user.getPassword(),
+//	            user.getAuthorities().stream()
+//	                    .map(authority -> new SimpleGrantedAuthority(authority.getAuthority()))
+//	                    .collect(Collectors.toList())
+//	    );
+//
+//	    // Print the UserDetails object and authorities
+//	    System.out.println("Loaded UserDetails: " + userDetails);
+//	    System.out.println("Authorities/Roles: " + userDetails.getAuthorities());
+//
+//	    String encodedPassword = userDetails.getPassword();
+//	    System.out.println("Encoded Password: " + encodedPassword);
+//
+//	    return userDetails;
+//	}
 
 
 	public Optional<User> findById(Integer userId) {
@@ -80,8 +82,8 @@ public class UserService implements UserDetailsService {
 
 	public User registerNewUser(String username, String password) {
 	    User user = new User(username, passwordEncoder.encode(password));
-//	    Authority authority = authorityRepository.findByName(roleName);
-//	    user.setAuthorities(Collections.singletonList(authority));
+	    Authority authority = authorityRepository.findByName("ROLE_USER");
+	    user.setAuthorities(Collections.singletonList(authority));
 	    return userRepository.save(user);
 	}
 
