@@ -19,7 +19,9 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 
 import org.springframework.security.core.Authentication;
 
@@ -50,7 +52,7 @@ public class SecurityConfiguration {
 	private PasswordEncoder passwordEncoder;
 	@Autowired
     private UserService userService;
-
+	
 	public SecurityConfiguration(UserRepository userRepository, JwtAuthenticationFilter jwtAuthenticationFilter,
 			JwtService jwtService, RefreshTokenService refreshTokenService) {
 		super();
@@ -71,20 +73,34 @@ public class SecurityConfiguration {
 	public UserDetailsService userDetailsService() {
 		return userService;
 	}
-
 	@Bean
 	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+	    List<String> allUsers = Arrays.asList(
+	        "/login",
+	        "/refresh-token",
+	        "/signup",
+	        "/api/v1/users",
+	        "/api/v1/users/**",
+	        "/h2-console/**",
+	        "/free",
+	        "/admin/**",
+	        "/user/**",
+	        "/products",
+	        "/anotherEndpoint" // Add your additional endpoints here
+	    );
+	    
 	    http
 	        .csrf(AbstractHttpConfigurer::disable)
 	        .authorizeHttpRequests(authz -> {
+	            for (String userEndpoint : allUsers) {
+	                authz.requestMatchers(new AntPathRequestMatcher(userEndpoint)).permitAll();
+	            }
+
 	            authz
-					.requestMatchers(new AntPathRequestMatcher("/api/v1/users")).permitAll()
-		            .requestMatchers(new AntPathRequestMatcher("/api/v1/users/**")).permitAll() 
-		            .requestMatchers(new AntPathRequestMatcher("/h2-console/**")).permitAll() // H2 Database Console
-	                .requestMatchers(new AntPathRequestMatcher("/free")).permitAll() // Public endpoint
-	                .requestMatchers(new AntPathRequestMatcher("/admin/**")).hasAuthority("ROLE_ADMIN") // Admin-only endpoints
+ 	                .requestMatchers(new AntPathRequestMatcher("/admin/**")).hasAuthority("ROLE_ADMIN") // Admin-only endpoints
 	                .requestMatchers(new AntPathRequestMatcher("/user/**")).hasAuthority("ROLE_USER") // User-only endpoints
-	                .requestMatchers(new AntPathRequestMatcher("/products")).hasAuthority("ROLE_RED"); // User-only endpoints
+	                .requestMatchers(new AntPathRequestMatcher("/products")).hasAuthority("ROLE_USER"); // User-only endpoints
+
 	            authz
 	                .anyRequest().authenticated(); // All other requests must be authenticated
 	        })
@@ -94,8 +110,8 @@ public class SecurityConfiguration {
 	            )
 	        .sessionManagement(manager -> manager.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 	        .authenticationProvider(authenticationProvider())
-	        .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-	        .formLogin(this::configureFormLogin);
+	        .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+//	      .formLogin(this::configureFormLogin);
 
 	    return http.build();
 	}
