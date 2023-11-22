@@ -77,7 +77,7 @@ public class UserController {
 				new AuthenticationResponse(loggedInUser.getUsername(), accessToken, refreshToken.getRefreshToken()));
 	}
 
-	@PostMapping("/refreshtoken")
+	@PostMapping("/refresh-token")
 	public ResponseEntity<RefreshTokenResponse> getNewAccessToken(
 			@RequestBody RefreshTokenRequest refreshTokenRequest) {
 		String accessToken = refreshTokenService.createNewAccessToken(refreshTokenRequest);

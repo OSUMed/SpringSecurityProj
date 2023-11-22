@@ -9,8 +9,10 @@ public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Inte
     
     Optional<RefreshToken> findByUser_Username(String username);
     
+    // For refreshing access token
     Optional<RefreshToken> findByRefreshToken(String refreshToken);
     
+    // For login
     Optional<RefreshToken> findByUser(User user);
 
 }
