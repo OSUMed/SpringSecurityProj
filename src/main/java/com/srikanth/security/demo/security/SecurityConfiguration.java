@@ -69,46 +69,67 @@ public class SecurityConfiguration {
 		return userService;
 	}
 
+//	@Bean
+//	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+//		String pathsPermitAll = "\"/api/v1/users\", \"/allusers\", \"/api/v1/users/**\", \"/h2-console/**\", \"/free\", \"/signup\"";
+//		http.csrf(AbstractHttpConfigurer::disable).authorizeHttpRequests(authz -> {
+//			authz.requestMatchers(new AntPathRequestMatcher(pathsPermitAll)).permitAll()
+//					.requestMatchers(new AntPathRequestMatcher("/user/welcome")).authenticated() // Public endpoint
+//					.requestMatchers(new AntPathRequestMatcher("/admin/**")).hasAuthority("ROLE_ADMIN") 
+//					.requestMatchers(new AntPathRequestMatcher("/user/**")).hasAuthority("ROLE_USER") 
+//					.requestMatchers(new AntPathRequestMatcher("/blue/**")).hasAuthority("ROLE_BLUE") 
+//					.requestMatchers(new AntPathRequestMatcher("/red/**")).hasAuthority("ROLE_RED") 
+//					.requestMatchers(new AntPathRequestMatcher("/green/**")).hasAuthority("ROLE_GREEN"); 
+//			authz.anyRequest().authenticated(); 
+//		}).headers(headers -> headers
+//				// Disable frame options for H2 Console
+//				.frameOptions(frameOptions -> frameOptions.disable()))
+////				.sessionManagement(manager -> manager.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+//				.authenticationProvider(authenticationProvider())
+//				.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+//				.formLogin(this::configureFormLogin)
+//				.logout(logoutConfigurer -> {
+//			            logoutConfigurer
+//			                .logoutUrl("/perform_logout") // URL to trigger the logout
+//			                .logoutSuccessUrl("/login") // URL to redirect after logout
+//			                .deleteCookies("accessToken") // Cookies to delete upon logout
+//			                .deleteCookies("refreshToken") // Cookies to delete upon logout
+//			                .invalidateHttpSession(true) // Invalidate session
+//			                .clearAuthentication(true); // Clear authentication
+//			        });
+//
+//		return http.build();
+//
+//	}
 	@Bean
 	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-		http.csrf(AbstractHttpConfigurer::disable).authorizeHttpRequests(authz -> {
-			authz.requestMatchers(new AntPathRequestMatcher("/api/v1/users")).permitAll()
-					.requestMatchers(new AntPathRequestMatcher("/allusers")).permitAll()
-					.requestMatchers(new AntPathRequestMatcher("/api/v1/users/**")).permitAll()
-					.requestMatchers(new AntPathRequestMatcher("/h2-console/**")).permitAll() // H2 Database Console
-					.requestMatchers(new AntPathRequestMatcher("/free")).permitAll() // Public endpoint
-					.requestMatchers(new AntPathRequestMatcher("/signup")).permitAll() // Public endpoint
-					.requestMatchers(new AntPathRequestMatcher("/user/welcome")).authenticated() // Public endpoint
-					.requestMatchers(new AntPathRequestMatcher("/admin/**")).hasAuthority("ROLE_ADMIN") // Admin-only
-																										// endpoints
-					.requestMatchers(new AntPathRequestMatcher("/user/**")).hasAuthority("ROLE_USER") // User-only
-																										// endpoints
-					.requestMatchers(new AntPathRequestMatcher("/blue/**")).hasAuthority("ROLE_BLUE") // User-only
-																										// endpoints
-					.requestMatchers(new AntPathRequestMatcher("/red/**")).hasAuthority("ROLE_RED") // User-only
-																									// endpoints
-					.requestMatchers(new AntPathRequestMatcher("/green/**")).hasAuthority("ROLE_GREEN"); // User-only
-																											// endpoints
-			authz.anyRequest().authenticated(); // All other requests must be authenticated
-		}).headers(headers -> headers
-				// Disable frame options for H2 Console
-				.frameOptions(frameOptions -> frameOptions.disable()))
-//				.sessionManagement(manager -> manager.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-				.authenticationProvider(authenticationProvider())
-				.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-				.formLogin(this::configureFormLogin)
-				.logout(logoutConfigurer -> {
-			            logoutConfigurer
-			                .logoutUrl("/perform_logout") // URL to trigger the logout
-			                .logoutSuccessUrl("/login") // URL to redirect after logout
-			                .deleteCookies("accessToken") // Cookies to delete upon logout
-			                .deleteCookies("refreshToken") // Cookies to delete upon logout
-			                .invalidateHttpSession(true) // Invalidate session
-			                .clearAuthentication(true); // Clear authentication
-			        });
+	    String[] pathsPermitAll = { "/api/v1/users", "/allusers", "/api/v1/users/**", "/h2-console/**", "/free", "/signup" };
+	    http.csrf(AbstractHttpConfigurer::disable)
+	        .authorizeHttpRequests(authz -> {
+	            for (String path : pathsPermitAll) {
+	                authz.requestMatchers(new AntPathRequestMatcher(path)).permitAll();
+	            }
+	            authz.requestMatchers(new AntPathRequestMatcher("/user/welcome")).authenticated()
+	                 .requestMatchers(new AntPathRequestMatcher("/admin/**")).hasAuthority("ROLE_ADMIN")
+	                 .requestMatchers(new AntPathRequestMatcher("/user/**")).hasAuthority("ROLE_USER")
+	                 .requestMatchers(new AntPathRequestMatcher("/blue/**")).hasAuthority("ROLE_BLUE")
+	                 .requestMatchers(new AntPathRequestMatcher("/red/**")).hasAuthority("ROLE_RED")
+	                 .requestMatchers(new AntPathRequestMatcher("/green/**")).hasAuthority("ROLE_GREEN")
+	                 .anyRequest().authenticated();
+	        })
+	        .headers(frameOptions -> frameOptions.disable())
+	        .authenticationProvider(authenticationProvider())
+	        .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+	        .formLogin(this::configureFormLogin)
+	        .logout(logoutConfigurer -> {
+	            logoutConfigurer.logoutUrl("/perform_logout")
+	                .logoutSuccessUrl("/login")
+	                .deleteCookies("accessToken", "refreshToken")
+	                .invalidateHttpSession(true)
+	                .clearAuthentication(true);
+	        });
 
-		return http.build();
-
+	    return http.build();
 	}
 
 	private void configureFormLogin(FormLoginConfigurer<HttpSecurity> login) {
