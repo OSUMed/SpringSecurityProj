@@ -46,6 +46,7 @@ public class SecurityConfiguration {
         http.csrf(AbstractHttpConfigurer::disable)
           .authorizeHttpRequests((request) -> {
             request
+                   .requestMatchers("/test").permitAll()
                    .requestMatchers("/api/v1/users").permitAll()
                    .requestMatchers("/api/v1/users/**").permitAll()
                    .requestMatchers("/free").permitAll()

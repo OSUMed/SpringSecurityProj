@@ -3,6 +3,7 @@ package com.srikanth.security.demo.web;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -48,6 +49,11 @@ public class UserController {
 //        
 //        return ResponseEntity.ok(savedUser);
 //    }
+	
+	@GetMapping("/test")
+	public String getTest() {
+		return "This is test endpoint";
+	}
     @PostMapping("")
     public ResponseEntity<AuthenticationResponse> signUpUser (@RequestBody User user) {
         user.setPassword(passwordEncoder.encode(user.getPassword()));
